@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4f4f1">
+<title>ZORA BUILDER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono&display=swap');
+:root{--bg:#f4f4f1;--white:#fff;--ink:#20211f;--muted:#85867f;--line:#e7e7e1;--soft:#f8f8f5}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+header{height:65px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px;position:sticky;top:0;z-index:5}
+.logo{font-size:16px;font-weight:800;letter-spacing:-.7px;display:flex;align-items:center;gap:10px}
+.logo-box{background:#20211f;color:white;width:29px;height:29px;display:grid;place-items:center}
+.logo small{font-size:11px;color:#999;font-weight:500;letter-spacing:1px}
+.top-right{font:10px 'DM Mono';color:#85867f}
+.shell{max-width:1200px;margin:auto;display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 65px)}
+aside{border-right:1px solid var(--line);padding:28px 14px;background:#f8f8f5}
+.nav-label{font:9px 'DM Mono';letter-spacing:1.5px;color:#a1a199;padding:0 12px;margin:10px 0}
+.nav{width:100%;padding:12px;background:none;border:0;text-align:left;font-size:12px;color:#777;margin:2px 0;border-radius:3px}
+.nav.active{background:#e9e9e4;color:#20211f;font-weight:700}
+main{padding:37px 45px 90px;max-width:950px;width:100%}
+.crumb{font:10px 'DM Mono';color:#999;margin-bottom:24px}
+.heading{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:25px}
+h1{font-size:32px;letter-spacing:-1.5px}
+.heading p{font-size:12px;color:var(--muted);margin-top:7px}
+.tag{border:1px solid var(--line);background:white;padding:8px;font:9px 'DM Mono';color:#777}
+.notice{background:#ededE8;border:1px solid #e2e2dc;padding:14px 16px;font-size:11px;color:#686960;line-height:1.7;margin-bottom:20px}
+.notice b{color:#242520}
+.panel{background:white;border:1px solid var(--line);margin-bottom:15px}
+.panel-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.panel-head b{font-size:13px}
+.panel-head small{display:block;color:#999;font-size:10px;margin-top:4px}
+.step{font:10px 'DM Mono';color:#aaa}
+.panel-body{padding:21px}
+.label{display:block;font-size:11px;font-weight:700;margin-bottom:8px}
+.input{width:100%;height:44px;border:1px solid #e3e3dd;background:#fbfbf9;padding:0 12px;outline:none;border-radius:2px;font-size:12px;color:#222}
+.input:focus{border-color:#777}
+.input::placeholder{color:#b4b4ad}
+.field{margin-bottom:19px}
+.hint{font-size:10px;color:#999;margin-top:7px;line-height:1.6}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:22px}
+.mode{background:white;border:1px solid var(--line);text-align:left;padding:13px;min-height:78px}
+.mode.active{border:1px solid #292a26;background:#f5f5f1;box-shadow:inset 0 0 0 1px #292a26}
+.mode b{display:block;font-size:11px;margin-bottom:7px}
+.mode small{font-size:9px;color:#999;line-height:1.5}
+.upload{min-height:110px;border:1px dashed #d4d4cc;background:#fafaf8;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:15px;cursor:pointer;text-align:center}
+.upload b{font-size:11px}
+.upload small{font-size:9px;color:#999}
+.upload input{display:none}
+.file-name{font-size:10px;color:#666;margin-top:7px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.icon-row{display:flex;align-items:center;gap:15px}
+.icon-preview{height:64px;width:64px;background:#eee;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;flex-shrink:0}
+.icon-preview img{width:100%;height:100%;object-fit:cover}
+.icon-preview b{font-size:21px}
+.build{background:#22231f;color:white;padding:24px;margin-top:20px}
+.build-head{display:flex;justify-content:space-between;align-items:center}
+.build h3{font-size:15px}
+.build-head small{font:9px 'DM Mono';color:#aaa}
+.build p{font-size:11px;color:#aaa;line-height:1.7;margin:13px 0 19px}
+.build button{height:47px;width:100%;border:0;background:#f1f1ec;font-size:11px;font-weight:800}
+.result{display:none;border-top:1px solid #444;padding-top:14px;margin-top:14px;font-size:11px;line-height:1.8;color:#ddd}
+footer{display:flex;justify-content:space-between;margin-top:30px;font:9px 'DM Mono';color:#aaa}
+.mobile-nav{display:none}
+@media(max-width:700px){
+header{height:58px;padding:0 16px}
+.shell{display:block}
+aside{display:none}
+main{padding:25px 15px 95px}
+h1{font-size:27px}
+.heading{align-items:flex-start}
+.heading p{max-width:230px;line-height:1.6}
+.tag{font-size:8px;padding:7px}
+.panel-head{padding:16px}
+.panel-body{padding:16px}
+.modes{gap:6px}
+.mode{padding:10px 8px;min-height:85px}
+.mode b{font-size:10px}
+.mode small{font-size:9px}
+.two{grid-template-columns:1fr;gap:0}
+.build{padding:20px 16px}
+.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:62px;background:#fff;border-top:1px solid var(--line);justify-content:space-around;align-items:center;z-index:5}
+.mobile-nav button{border:0;background:none;color:#888;font-size:10px;display:grid;gap:4px;text-align:center}
+.mobile-nav button.active{color:#222;font-weight:700}
+}
+@media(max-width:360px){.modes{grid-template-columns:1fr}.mode{min-height:60px}}
+</style>
+</head>
+<body>
+<header>
+<div class="logo"><div class="logo-box">Z</div>ZORA <small>BUILDER</small></div>
+<div class="top-right">APPLICATION STUDIO / 1.0</div>
+</header>
+<div class="shell">
+<aside>
+<div class="nav-label">WORKSPACE</div>
+<button class="nav active">01 &nbsp; Web to APK</button>
+<button class="nav" onclick="notice('Build history')">02 &nbsp; Build history</button>
+<button class="nav" onclick="notice('Projects')">03 &nbsp; Projects</button>
+<div class="nav-label">GENERAL</div>
+<button class="nav" onclick="notice('Settings')">04 &nbsp; Settings</button>
+<button class="nav" onclick="notice('Documentation')">05 &nbsp; Documentation</button>
+</aside>
+<main>
+<div class="crumb">WORKSPACE / <b>WEB TO APK</b></div>
+<div class="heading"><div><h1>Web to APK</h1><p>Convert a website into an Android application.</p></div><div class="tag">BUILD / 001</div></div>
+<div class="notice"><b>PROJECT CONFIGURATION</b><br>Configure your source, application identity and Android settings before submitting a build.</div>
+
+<section class="panel">
+<div class="panel-head"><div><b>Source</b><small>Select your website source</small></div><span class="step">01 / 04</span></div>
+<div class="panel-body">
+<div class="modes">
+<button class="mode active" onclick="setMode('url',this)"><b>Website URL</b><small>Existing website</small></button>
+<button class="mode" onclick="setMode('html',this)"><b>HTML File</b><small>Single HTML file</small></button>
+<button class="mode" onclick="setMode('zip',this)"><b>ZIP Archive</b><small>Complete project</small></button>
+</div>
+<div id="urlBox"><label class="label">Website address</label><input class="input" id="url" type="url" placeholder="https://example.com"><div class="hint">Include the full HTTPS address.</div></div>
+<div id="htmlBox" hidden><label class="label">HTML document</label><label class="upload"><b>Select HTML file</b><small>Choose index.html</small><input id="htmlFile" type="file" accept=".html,.htm"></label><div class="file-name" id="htmlName"></div></div>
+<div id="zipBox" hidden><label class="label">Project archive</label><label class="upload"><b>Select ZIP archive</b><small>Upload your website project</small><input id="zipFile" type="file" accept=".zip"></label><div class="file-name" id="zipName"></div></div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panel-head"><div><b>Application details</b><small>Android application identity</small></div><span class="step">02 / 04</span></div>
+<div class="panel-body">
+<div class="field"><label class="label">Application name</label><input class="input" id="appName" placeholder="My Application" maxlength="40"></div>
+<div class="field"><label class="label">Package identifier</label><input class="input" id="package" placeholder="com.example.application"><div class="hint">Unique reverse-domain identifier.</div></div>
+<div class="two">
+<div class="field"><label class="label">Version name</label><input class="input" id="version" value="1.0.0"></div>
+<div class="field"><label class="label">Version code</label><input class="input" id="code" type="number" min="1" value="1"></div>
+</div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panel-head"><div><b>Application icon</b><small>Launcher appearance</small></div><span class="step">03 / 04</span></div>
+<div class="panel-body">
+<div class="icon-row"><div class="icon-preview" id="preview"><b>Z</b></div><div style="flex:1"><label class="label">Icon image</label><label class="upload" style="min-height:43px"><b>Choose image</b><input type="file" id="icon" accept="image/png,image/jpeg,image/webp"></label><div class="hint">Square PNG recommended.</div></div></div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panel-head"><div><b>Android settings</b><small>Application behavior</small></div><span class="step">04 / 04</span></div>
+<div class="panel-body">
+<div class="two">
+<div class="field"><label class="label">Orientation</label><select class="input" id="orientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option><option value="auto">Auto rotate</option></select></div>
+<div class="field"><label class="label">Output format</label><select class="input" id="format"><option value="apk">APK</option><option value="aab">AAB</option></select></div>
+</div>
+<div class="field"><label class="label">Application theme</label><select class="input" id="theme"><option value="system">System default</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+<div class="field"><label class="label">Permissions</label><label style="font-size:11px;display:flex;gap:9px;align-items:center"><input type="checkbox" id="internet" checked> Internet access</label></div>
+</div>
+</section>
+
+<section class="build">
+<div class="build-head"><h3>Build application</h3><small>FINAL STEP</small></div>
+<p>Submit the project to the Android build service. A real APK will be generated after the backend is connected.</p>
+<button onclick="build()">SUBMIT BUILD REQUEST →</button>
+<div class="result" id="result"></div>
+</section>
+<footer><span>ZORA BUILDER / 2026</span><span>ANDROID STUDIO</span></footer>
+</main>
+</div>
+<nav class="mobile-nav">
+<button class="active">01<br>Builder</button>
+<button onclick="notice('Projects')">02<br>Projects</button>
+<button onclick="notice('History')">03<br>History</button>
+<button onclick="notice('Settings')">04<br>Settings</button>
+</nav>
+<script>
+let mode='url';
+function setMode(m,b){
+mode=m;
+document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
+b.classList.add('active');
+['url','html','zip'].forEach(x=>document.getElementById(x+'Box').hidden=x!==m);
+}
+function fileName(id,target){
+document.getElementById(id).addEventListener('change',e=>{
+document.getElementById(target).textContent=e.target.files[0]?.name||'';
+});
+}
+fileName('htmlFile','htmlName');
+fileName('zipFile','zipName');
+document.getElementById('icon').addEventListener('change',e=>{
+const f=e.target.files[0];if(!f)return;
+const reader=new FileReader();
+reader.onload=x=>document.getElementById('preview').innerHTML='<img src="'+x.target.result+'" alt="Icon">';
+reader.readAsDataURL(f);
+});
+function notice(t){alert(t+' will be available in a future module.');}
+function build(){
+const name=document.getElementById('appName').value.trim();
+const pkg=document.getElementById('package').value.trim();
+const result=document.getElementById('result');
+if(!name)return alert('Application name is required.');
+if(!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(pkg))return alert('Invalid package identifier.');
+if(mode==='url'){
+try{const u=new URL(document.getElementById('url').value);if(!['http:','https:'].includes(u.protocol))throw 0;}catch{return alert('Enter a valid URL.');}
+}
+if(mode==='html'&&!document.getElementById('htmlFile').files.length)return alert('Select an HTML file.');
+if(mode==='zip'&&!document.getElementById('zipFile').files.length)return alert('Select a ZIP file.');
+result.style.display='block';
+result.textContent='Configuration valid. Backend is not connected yet. No APK has been generated.';
+}
+</script>
+</body>
+                                                             </html>
+                                                             
