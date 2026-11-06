@@ -66,25 +66,74 @@ jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+      # Setup Android SDK menggunakan command-line tools terbaru
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          cmdline-tools-version: "15859902"
+          packages: ""
+          accept-android-sdk-licenses: true
 
-      - name: Install Android SDK packages
+      - name: Check Android SDK
         run: |
-          sdkmanager "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
+          echo "Java version:"
+          java -version
+
+          echo "Android SDK:"
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"
+
+          echo "SDK Manager:"
+          sdkmanager --version
+
+      # Install SDK packages dengan retry
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          set -e
+
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME}}"
+
+          if [ -z "$SDK_ROOT" ]; then
+            echo "Android SDK directory tidak ditemukan"
+            exit 1
+          fi
+
+          for attempt in 1 2 3; do
+            echo "Percobaan instalasi SDK ke-$attempt"
+
+            if sdkmanager \
+              --sdk_root="$SDK_ROOT" \
+              --install \
+              "platform-tools" \
+              "platforms;android-35" \
+              "build-tools;35.0.0"; then
+
+              echo "Android SDK berhasil diinstal"
+              exit 0
+            fi
+
+            echo "Instalasi gagal, mencoba kembali..."
+
+            if [ "$attempt" -lt 3 ]; then
+              sleep 15
+            fi
+          done
+
+          echo "Gagal menginstal Android SDK setelah 3 percobaan"
+          exit 1
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -102,56 +151,87 @@ jobs:
           VERSION_NAME: ${{ inputs.version_name }}
           THEME_COLOR: ${{ inputs.theme_color }}
           SPLASH_DURATION: ${{ inputs.splash_duration }}
+
         run: |
           python3 -m pip install --quiet Pillow
 
           python3 <<'PY'
-          import os, re, json, base64
+          import os
+          import re
+          import json
+          import base64
+          import io
           from pathlib import Path
+          from urllib.parse import urlparse
+          from xml.sax.saxutils import escape
           from PIL import Image, ImageOps, ImageDraw
 
-          app_name = os.environ["APP_NAME"]
-          package = os.environ["PACKAGE_NAME"]
-          url = os.environ["WEBSITE_URL"]
+          app_name = os.environ["APP_NAME"].strip()
+          package = os.environ["PACKAGE_NAME"].strip()
+          url = os.environ["WEBSITE_URL"].strip()
           orientation = os.environ["ORIENTATION"]
-          version = os.environ["VERSION_NAME"]
-          color = os.environ["THEME_COLOR"]
+          version = os.environ["VERSION_NAME"].strip()
+          color = os.environ["THEME_COLOR"].strip()
           duration = int(os.environ["SPLASH_DURATION"])
 
-          if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+", package):
+          # Validasi input
+          if not app_name:
+              raise ValueError("Nama aplikasi tidak boleh kosong")
+
+          if not re.fullmatch(
+              r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+",
+              package
+          ):
               raise ValueError("Package name tidak valid")
 
+          if not re.fullmatch(
+              r"[A-Za-z0-9][A-Za-z0-9._+-]{0,31}",
+              version
+          ):
+              raise ValueError("Format versi aplikasi tidak valid")
+
           if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
-              raise ValueError("Warna tema harus HEX, contoh #202020")
+              raise ValueError("Warna tema harus menggunakan HEX")
 
           if orientation not in ("portrait", "landscape"):
               raise ValueError("Orientasi tidak valid")
 
-          if not re.match(r"^https?://", url):
-              raise ValueError("URL harus diawali http:// atau https://")
+          parsed_url = urlparse(url)
+
+          if parsed_url.scheme not in ("http", "https") or not parsed_url.netloc:
+              raise ValueError("URL website tidak valid")
 
           duration = max(0, min(duration, 10000))
 
           root = Path("android-project")
           app = root / "app"
           src = app / "src/main"
+
           java_package = package.replace(".", "/")
           java_dir = src / "java" / java_package
 
           java_dir.mkdir(parents=True, exist_ok=True)
           (src / "res").mkdir(parents=True, exist_ok=True)
 
+          # Decode gambar
           def decode_image(value):
               if not value:
                   return None
-              if "," in value and value.startswith("data:"):
+
+              if value.startswith("data:") and "," in value:
                   value = value.split(",", 1)[1]
-              return Image.open(
-                  __import__("io").BytesIO(base64.b64decode(value))
-              ).convert("RGBA")
+
+              raw = base64.b64decode(value, validate=True)
+
+              image = Image.open(io.BytesIO(raw))
+              image.load()
+
+              return image.convert("RGBA")
 
           icon = decode_image(os.environ.get("ICON_BASE64", ""))
-          splash = decode_image(os.environ.get("SPLASH_BASE64", ""))
+          splash_image = decode_image(
+              os.environ.get("SPLASH_BASE64", "")
+          )
 
           # Generate launcher icons
           sizes = {
@@ -169,28 +249,54 @@ jobs:
               if icon:
                   image = ImageOps.fit(icon, (size, size))
               else:
-                  image = Image.new("RGBA", (size, size), color)
+                  image = Image.new(
+                      "RGBA",
+                      (size, size),
+                      color
+                  )
+
                   draw = ImageDraw.Draw(image)
                   draw.ellipse(
-                      (size*.2, size*.2, size*.8, size*.8),
+                      (
+                          size * 0.2,
+                          size * 0.2,
+                          size * 0.8,
+                          size * 0.8
+                      ),
                       fill="white"
                   )
 
               image.save(out / "ic_launcher.png")
 
-          # Generate splash image
+          # Generate splash screen
           splash_dir = src / "res/drawable-nodpi"
           splash_dir.mkdir(parents=True, exist_ok=True)
 
-          if splash:
-              splash = ImageOps.contain(splash, (1080, 1920))
-              canvas = Image.new("RGBA", (1080, 1920), color)
+          if splash_image:
+              splash_image = ImageOps.contain(
+                  splash_image,
+                  (1080, 1920)
+              )
+
+              canvas = Image.new(
+                  "RGBA",
+                  (1080, 1920),
+                  color
+              )
+
               canvas.alpha_composite(
-                  splash,
-                  ((1080-splash.width)//2, (1920-splash.height)//2)
+                  splash_image,
+                  (
+                      (1080 - splash_image.width) // 2,
+                      (1920 - splash_image.height) // 2
+                  )
               )
           else:
-              canvas = Image.new("RGBA", (1080, 1920), color)
+              canvas = Image.new(
+                  "RGBA",
+                  (1080, 1920),
+                  color
+              )
 
           canvas.save(splash_dir / "splash.png")
 
@@ -203,6 +309,7 @@ jobs:
                   gradlePluginPortal()
               }
           }
+
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -210,6 +317,7 @@ jobs:
                   mavenCentral()
               }
           }
+
           rootProject.name = "ZoraBuilder"
           include(":app")
           """)
@@ -244,12 +352,28 @@ jobs:
           }}
           """)
 
-          manifest = f"""<?xml version="1.0" encoding="utf-8"?>
+          # App name dalam resource XML
+          values_dir = src / "res/values"
+          values_dir.mkdir(parents=True, exist_ok=True)
+
+          safe_app_name = escape(app_name)
+
+          (values_dir / "strings.xml").write_text(
+              '<?xml version="1.0" encoding="utf-8"?>\n'
+              '<resources>\n'
+              f'    <string name="app_name">{safe_app_name}</string>\n'
+              '</resources>\n'
+          )
+
+          # Android Manifest
+          manifest = """<?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
               <uses-permission android:name="android.permission.INTERNET"/>
+
               <application
                   android:allowBackup="false"
-                  android:label={json.dumps(app_name)}
+                  android:label="@string/app_name"
                   android:icon="@mipmap/ic_launcher"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
                   android:usesCleartextTraffic="true">
@@ -257,20 +381,25 @@ jobs:
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
-                      android:screenOrientation="{orientation}"
+                      android:screenOrientation="ORIENTATION_PLACEHOLDER"
                       android:configChanges="orientation|screenSize|keyboardHidden">
 
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
+
                   </activity>
               </application>
           </manifest>
-          """
+          """.replace(
+              "ORIENTATION_PLACEHOLDER",
+              orientation
+          )
 
           (src / "AndroidManifest.xml").write_text(manifest)
 
+          # Java WebView Activity
           java_code = f"""
           package {package};
 
@@ -283,12 +412,8 @@ jobs:
           import android.widget.FrameLayout;
           import android.widget.ImageView;
           import android.graphics.Color;
-          import android.graphics.Bitmap;
-          import android.graphics.drawable.BitmapDrawable;
-          import android.graphics.drawable.Drawable;
           import android.os.Handler;
           import android.os.Looper;
-          import android.webkit.WebResourceRequest;
 
           public class MainActivity extends Activity {{
 
@@ -299,39 +424,69 @@ jobs:
               protected void onCreate(Bundle savedInstanceState) {{
                   super.onCreate(savedInstanceState);
 
-                  getWindow().setStatusBarColor(Color.parseColor("{color}"));
+                  getWindow().setStatusBarColor(
+                      Color.parseColor("{color}")
+                  );
+
                   getWindow().setNavigationBarColor(Color.BLACK);
 
                   root = new FrameLayout(this);
 
                   web = new WebView(this);
+
                   web.getSettings().setJavaScriptEnabled(true);
                   web.getSettings().setDomStorageEnabled(true);
                   web.getSettings().setDatabaseEnabled(true);
                   web.getSettings().setLoadsImagesAutomatically(true);
                   web.getSettings().setSupportZoom(false);
+
                   web.setWebViewClient(new WebViewClient());
                   web.setWebChromeClient(new WebChromeClient());
 
-                  root.addView(web);
-
-                  ImageView splash = new ImageView(this);
-                  splash.setImageResource(
-                      getResources().getIdentifier(
-                          "splash", "drawable", getPackageName()
+                  root.addView(
+                      web,
+                      new FrameLayout.LayoutParams(
+                          FrameLayout.LayoutParams.MATCH_PARENT,
+                          FrameLayout.LayoutParams.MATCH_PARENT
                       )
                   );
-                  splash.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                  splash.setBackgroundColor(Color.parseColor("{color}"));
 
-                  root.addView(splash);
+                  ImageView splashView = new ImageView(this);
+
+                  splashView.setImageResource(
+                      getResources().getIdentifier(
+                          "splash",
+                          "drawable",
+                          getPackageName()
+                      )
+                  );
+
+                  splashView.setScaleType(
+                      ImageView.ScaleType.FIT_CENTER
+                  );
+
+                  splashView.setBackgroundColor(
+                      Color.parseColor("{color}")
+                  );
+
+                  root.addView(
+                      splashView,
+                      new FrameLayout.LayoutParams(
+                          FrameLayout.LayoutParams.MATCH_PARENT,
+                          FrameLayout.LayoutParams.MATCH_PARENT
+                      )
+                  );
+
                   setContentView(root);
 
                   new Handler(Looper.getMainLooper()).postDelayed(() -> {{
-                      if (splash.getParent() != null) {{
-                          root.removeView(splash);
+
+                      if (splashView.getParent() != null) {{
+                          root.removeView(splashView);
                       }}
+
                       web.loadUrl({json.dumps(url)});
+
                   }}, {duration});
               }}
 
@@ -348,7 +503,14 @@ jobs:
 
           (java_dir / "MainActivity.java").write_text(java_code)
 
-          print("Android project berhasil dibuat")
+          print("================================")
+          print("ANDROID PROJECT BERHASIL DIBUAT")
+          print("App:", app_name)
+          print("Package:", package)
+          print("URL:", url)
+          print("Orientation:", orientation)
+          print("Version:", version)
+          print("================================")
           PY
 
       - name: Build APK
@@ -356,19 +518,38 @@ jobs:
         run: |
           gradle --no-daemon assembleDebug
 
+      - name: Verify APK
+        run: |
+          APK="android-project/app/build/outputs/apk/debug/app-debug.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "File APK tidak ditemukan"
+            exit 1
+          fi
+
+          ls -lh "$APK"
+
       - name: Prepare APK
         env:
           APP_NAME: ${{ inputs.app_name }}
           VERSION_NAME: ${{ inputs.version_name }}
         run: |
+          set -e
+
           mkdir -p output
 
-          APP_SLUG=$(echo "$APP_NAME" | tr ' ' '-' | tr -cd 'A-Za-z0-9_-')
-          VERSION_SLUG=$(echo "$VERSION_NAME" | tr -cd 'A-Za-z0-9._-')
+          APP_SLUG=$(echo "$APP_NAME" \
+            | tr ' ' '-' \
+            | tr -cd 'A-Za-z0-9_-')
 
-          cp android-project/app/build/outputs/apk/debug/app-debug.apk \
+          VERSION_SLUG=$(echo "$VERSION_NAME" \
+            | tr -cd 'A-Za-z0-9._-')
+
+          cp \
+            android-project/app/build/outputs/apk/debug/app-debug.apk \
             "output/${APP_SLUG}-${VERSION_SLUG}.apk"
 
+          echo "APK berhasil disiapkan:"
           ls -lh output/
 
       - name: Upload APK artifact
