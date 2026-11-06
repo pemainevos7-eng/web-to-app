@@ -1,3 +1,4 @@
+
 name: ZORA BUILDER APK
 
 on:
@@ -34,17 +35,21 @@ jobs:
           WEBSITE_URL: ${{ inputs.website_url }}
         run: |
           python3 - <<'PY'
-          import os, re
+          import os
+          import re
           from urllib.parse import urlparse
 
-          name = os.environ["APP_NAME"]
-          package = os.environ["PACKAGE_NAME"]
-          url = urlparse(os.environ["WEBSITE_URL"])
+          name = os.environ["APP_NAME"].strip()
+          package = os.environ["PACKAGE_NAME"].strip()
+          url = urlparse(os.environ["WEBSITE_URL"].strip())
 
           if not name or len(name) > 40:
               raise SystemExit("Invalid application name")
 
-          if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+', package):
+          if not re.fullmatch(
+              r'[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+',
+              package
+          ):
               raise SystemExit("Invalid package name")
 
           if url.scheme not in ("https", "http") or not url.hostname:
@@ -58,12 +63,13 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-  uses: android-actions/setup-android@v3
-  with:
-    packages: platform-tools
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
 
-      - name: Install SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android platform
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -77,16 +83,18 @@ jobs:
           WEBSITE_URL: ${{ inputs.website_url }}
         run: |
           python3 - <<'PY'
-          import os, json, re
+          import os
+          import json
           from pathlib import Path
-          from xml.sax.saxutils import escape
+          from xml.sax.saxutils import quoteattr
 
-          name = os.environ["APP_NAME"]
-          package = os.environ["PACKAGE_NAME"]
-          url = os.environ["WEBSITE_URL"]
+          name = os.environ["APP_NAME"].strip()
+          package = os.environ["PACKAGE_NAME"].strip()
+          url = os.environ["WEBSITE_URL"].strip()
 
           path = Path("app/src/main/java") / package.replace(".", "/")
           path.mkdir(parents=True, exist_ok=True)
+
           Path("app/src/main").mkdir(parents=True, exist_ok=True)
 
           Path("settings.gradle").write_text("""
@@ -97,6 +105,7 @@ jobs:
                   gradlePluginPortal()
               }
           }
+
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -104,6 +113,7 @@ jobs:
                   mavenCentral()
               }
           }
+
           rootProject.name = "ZoraBuilder"
           include ':app'
           """)
@@ -140,20 +150,25 @@ jobs:
 
           manifest = f"""<manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET"/>
+
               <application
-                  android:label="{escape(name)}"
+                  android:label={quoteattr(name)}
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
                   android:usesCleartextTraffic="true">
+
                   <activity
                       android:name=".MainActivity"
                       android:exported="true">
+
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
+
                   </activity>
               </application>
-          </manifest>"""
+          </manifest>
+          """
 
           Path("app/src/main/AndroidManifest.xml").write_text(manifest)
 
@@ -166,21 +181,27 @@ jobs:
           import android.webkit.WebSettings;
 
           public class MainActivity extends Activity {{
+
+              private WebView web;
+
               @Override
               protected void onCreate(Bundle state) {{
                   super.onCreate(state);
-                  WebView web = new WebView(this);
+
+                  web = new WebView(this);
+
                   WebSettings settings = web.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
+
                   web.setWebViewClient(new WebViewClient());
                   web.loadUrl({json.dumps(url)});
+
                   setContentView(web);
               }}
 
               @Override
               public void onBackPressed() {{
-                  WebView web = (WebView) findViewById(android.R.id.content);
                   if (web != null && web.canGoBack()) {{
                       web.goBack();
                   }} else {{
