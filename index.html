@@ -8,26 +8,12 @@
 <title>ZORA BUILDER</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono&display=swap');
-
-:root{
---bg:#f4f4f1;
---white:#fff;
---ink:#20211f;
---muted:#85867f;
---line:#e7e7e1;
---soft:#f8f8f5;
---green:#26734d;
---red:#a33d36;
-}
+:root{--bg:#f4f4f1;--white:#fff;--ink:#20211f;--muted:#85867f;--line:#e7e7e1;--green:#26734d;--red:#a33d36}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
 button,input,select{font:inherit}
 button{cursor:pointer}
-header{
-height:65px;background:white;border-bottom:1px solid var(--line);
-display:flex;align-items:center;justify-content:space-between;
-padding:0 25px;position:sticky;top:0;z-index:5
-}
+header{height:65px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px;position:sticky;top:0;z-index:5}
 .logo{font-size:16px;font-weight:800;letter-spacing:-.7px;display:flex;align-items:center;gap:10px}
 .logo-box{background:#20211f;color:white;width:29px;height:29px;display:grid;place-items:center}
 .logo small{font-size:11px;color:#999;font-weight:500;letter-spacing:1px}
@@ -63,16 +49,18 @@ h1{font-size:32px;letter-spacing:-1.5px}
 .mode:disabled{opacity:.45;cursor:not-allowed}
 .mode b{display:block;font-size:11px;margin-bottom:7px}
 .mode small{font-size:9px;color:#999;line-height:1.5}
-.upload{min-height:110px;border:1px dashed #d4d4cc;background:#fafaf8;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:15px;cursor:pointer;text-align:center}
+.upload{min-height:90px;border:1px dashed #d4d4cc;background:#fafaf8;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:15px;cursor:pointer;text-align:center}
 .upload b{font-size:11px}
 .upload small{font-size:9px;color:#999}
 .upload input{display:none}
-.file-name{font-size:10px;color:#666;margin-top:7px}
+.file-name{font-size:10px;color:#666;margin-top:7px;overflow-wrap:anywhere}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 .icon-row{display:flex;align-items:center;gap:15px}
 .icon-preview{height:64px;width:64px;background:#eee;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;flex-shrink:0}
 .icon-preview img{width:100%;height:100%;object-fit:cover}
 .icon-preview b{font-size:21px}
+.splash-preview{width:100%;max-width:140px;aspect-ratio:9/16;background:#20211f;border:1px solid var(--line);overflow:hidden;margin-top:10px;display:grid;place-items:center;color:white;font-size:11px}
+.splash-preview img{width:100%;height:100%;object-fit:contain}
 .build{background:#22231f;color:white;padding:24px;margin-top:20px}
 .build-head{display:flex;justify-content:space-between;align-items:center}
 .build h3{font-size:15px}
@@ -84,7 +72,8 @@ h1{font-size:32px;letter-spacing:-1.5px}
 .result.success{color:#d5eadc}
 .result.error{color:#ffd2cd}
 .result a{color:white;display:inline-block;margin-top:10px;text-decoration:underline}
-.status{font:10px 'DM Mono';color:#aaa}
+.progress{height:5px;background:#494a45;margin-top:14px;overflow:hidden;display:none}
+.progress-bar{height:100%;width:0;background:#d8d8ce;transition:width .3s}
 footer{display:flex;justify-content:space-between;margin-top:30px;font:9px 'DM Mono';color:#aaa}
 .mobile-nav{display:none}
 @media(max-width:700px){
@@ -108,25 +97,24 @@ h1{font-size:27px}
 .mobile-nav button{border:0;background:none;color:#888;font-size:10px;display:grid;gap:4px;text-align:center}
 .mobile-nav button.active{color:#222;font-weight:700}
 }
-@media(max-width:360px){.modes{grid-template-columns:1fr}.mode{min-height:60px}}
 </style>
 </head>
-
 <body>
+
 <header>
 <div class="logo"><div class="logo-box">Z</div>ZORA <small>BUILDER</small></div>
-<div class="top-right">APPLICATION STUDIO / 1.1</div>
+<div class="top-right">APPLICATION STUDIO / 2.0</div>
 </header>
 
 <div class="shell">
 <aside>
 <div class="nav-label">WORKSPACE</div>
 <button class="nav active">01 &nbsp; Web to APK</button>
-<button class="nav" onclick="notice('Build history')">02 &nbsp; Build history</button>
-<button class="nav" onclick="notice('Projects')">03 &nbsp; Projects</button>
+<button class="nav" onclick="showNotice('Build history')">02 &nbsp; Build history</button>
+<button class="nav" onclick="showNotice('Projects')">03 &nbsp; Projects</button>
 <div class="nav-label">GENERAL</div>
-<button class="nav" onclick="notice('Settings')">04 &nbsp; Settings</button>
-<button class="nav" onclick="notice('Documentation')">05 &nbsp; Documentation</button>
+<button class="nav" onclick="showNotice('Settings')">04 &nbsp; Settings</button>
+<button class="nav" onclick="showNotice('Documentation')">05 &nbsp; Documentation</button>
 </aside>
 
 <main>
@@ -137,12 +125,12 @@ h1{font-size:27px}
 <h1>Web to APK</h1>
 <p>Convert a website into an Android application.</p>
 </div>
-<div class="tag">BUILD / 001</div>
+<div class="tag">BUILD / 002</div>
 </div>
 
 <div class="notice">
 <b>PROJECT CONFIGURATION</b><br>
-Configure your website and application identity before submitting a build.
+Atur website, identitas aplikasi, ikon, splash screen, dan konfigurasi Android.
 </div>
 
 <section class="panel">
@@ -152,22 +140,19 @@ Configure your website and application identity before submitting a build.
 </div>
 <div class="panel-body">
 <div class="modes">
-<button class="mode active" onclick="setMode('url',this)">
+<button class="mode active" type="button">
 <b>Website URL</b><small>Existing website</small>
 </button>
-<button class="mode" disabled>
+<button class="mode" type="button" disabled>
 <b>HTML File</b><small>Coming later</small>
 </button>
-<button class="mode" disabled>
+<button class="mode" type="button" disabled>
 <b>ZIP Archive</b><small>Coming later</small>
 </button>
 </div>
-
-<div>
-<label class="label">Website address</label>
+<label class="label" for="url">Website address</label>
 <input class="input" id="url" type="url" placeholder="https://example.com">
-<div class="hint">Gunakan alamat HTTPS website yang lu miliki atau punya izin untuk dikemas.</div>
-</div>
+<div class="hint">Masukkan alamat HTTPS website yang lu miliki atau punya izin untuk dikemas.</div>
 </div>
 </section>
 
@@ -178,23 +163,17 @@ Configure your website and application identity before submitting a build.
 </div>
 <div class="panel-body">
 <div class="field">
-<label class="label">Application name</label>
+<label class="label" for="appName">Application name</label>
 <input class="input" id="appName" placeholder="ZORA APP" maxlength="40">
 </div>
 <div class="field">
-<label class="label">Package identifier</label>
+<label class="label" for="package">Package identifier</label>
 <input class="input" id="package" placeholder="com.zora.app">
-<div class="hint">Example: com.company.application</div>
+<div class="hint">Contoh: com.company.application</div>
 </div>
-<div class="two">
 <div class="field">
-<label class="label">Version name</label>
+<label class="label" for="version">Version name</label>
 <input class="input" id="version" value="1.0.0">
-</div>
-<div class="field">
-<label class="label">Version code</label>
-<input class="input" id="code" type="number" min="1" value="1">
-</div>
 </div>
 </div>
 </section>
@@ -206,14 +185,15 @@ Configure your website and application identity before submitting a build.
 </div>
 <div class="panel-body">
 <div class="icon-row">
-<div class="icon-preview" id="preview"><b>Z</b></div>
+<div class="icon-preview" id="iconPreview"><b>Z</b></div>
 <div style="flex:1">
 <label class="label">Icon image</label>
-<label class="upload" style="min-height:43px">
-<b>Choose image</b>
+<label class="upload">
+<b>Choose icon from gallery</b>
+<small>PNG, JPG, WEBP</small>
 <input type="file" id="icon" accept="image/png,image/jpeg,image/webp">
 </label>
-<div class="hint">Pengaturan ikon belum dikirim ke workflow.</div>
+<div class="file-name" id="iconName">No icon selected</div>
 </div>
 </div>
 </div>
@@ -221,42 +201,60 @@ Configure your website and application identity before submitting a build.
 
 <section class="panel">
 <div class="panel-head">
-<div><b>Android settings</b><small>Application behavior</small></div>
+<div><b>Splash screen</b><small>Opening screen appearance</small></div>
 <span class="step">04 / 04</span>
+</div>
+<div class="panel-body">
+<label class="upload">
+<b>Choose splash screen</b>
+<small>PNG, JPG, WEBP</small>
+<input type="file" id="splash" accept="image/png,image/jpeg,image/webp">
+</label>
+<div class="file-name" id="splashName">No splash screen selected</div>
+<div class="splash-preview" id="splashPreview">SPLASH PREVIEW</div>
+<div class="hint">Gambar akan ditampilkan saat aplikasi dibuka.</div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panel-head">
+<div><b>Android settings</b><small>Application behavior</small></div>
+<span class="step">05 / 05</span>
 </div>
 <div class="panel-body">
 <div class="two">
 <div class="field">
-<label class="label">Orientation</label>
+<label class="label" for="orientation">Orientation</label>
 <select class="input" id="orientation">
 <option value="portrait">Portrait</option>
 <option value="landscape">Landscape</option>
-<option value="auto">Auto rotate</option>
 </select>
 </div>
 <div class="field">
-<label class="label">Output format</label>
-<select class="input" id="format">
-<option value="apk">APK</option>
-<option value="aab" disabled>AAB (coming later)</option>
-</select>
-</div>
-</div>
-<div class="field">
-<label class="label">Application theme</label>
+<label class="label" for="theme">Application theme</label>
 <select class="input" id="theme">
 <option value="system">System default</option>
 <option value="light">Light</option>
 <option value="dark">Dark</option>
 </select>
 </div>
-<div class="field">
-<label class="label">Permissions</label>
-<label style="font-size:11px;display:flex;gap:9px;align-items:center">
-<input type="checkbox" id="internet" checked disabled>
-Internet access (required)
-</label>
 </div>
+<div class="two">
+<div class="field">
+<label class="label" for="splashDuration">Splash duration</label>
+<select class="input" id="splashDuration">
+<option value="1000">1 second</option>
+<option value="2000" selected>2 seconds</option>
+<option value="3000">3 seconds</option>
+<option value="5000">5 seconds</option>
+</select>
+</div>
+<div class="field">
+<label class="label" for="themeColor">Theme color</label>
+<input class="input" id="themeColor" type="color" value="#202020" style="padding:5px">
+</div>
+</div>
+<div class="hint">APK debug akan dibuat otomatis. Build ini membutuhkan koneksi internet dan izin akses website.</div>
 </div>
 </section>
 
@@ -265,8 +263,12 @@ Internet access (required)
 <h3>Build application</h3>
 <small>FINAL STEP</small>
 </div>
-<p>Submit your website to the Android build service. The APK will be generated by GitHub Actions.</p>
-<button id="buildButton" onclick="build()">SUBMIT BUILD REQUEST →</button>
+<p>Kirim konfigurasi ke server. Proses build berjalan otomatis dan APK bisa diunduh langsung dari halaman ini.</p>
+<button id="buildButton" type="button" onclick="build()">BUILD ANDROID APK →</button>
+<div class="progress" id="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+<div class="status" id="buildStatus"></div>
 <div class="result" id="result" aria-live="polite"></div>
 </section>
 
@@ -279,114 +281,276 @@ Internet access (required)
 
 <nav class="mobile-nav">
 <button class="active">01<br>Builder</button>
-<button onclick="notice('Projects')">02<br>Projects</button>
-<button onclick="notice('History')">03<br>History</button>
-<button onclick="notice('Settings')">04<br>Settings</button>
+<button onclick="showNotice('Projects')">02<br>Projects</button>
+<button onclick="showNotice('History')">03<br>History</button>
+<button onclick="showNotice('Settings')">04<br>Settings</button>
 </nav>
 
 <script>
-function setMode(mode, button) {
-  document.querySelectorAll('.mode').forEach(item => item.classList.remove('active'));
-  button.classList.add('active');
+const $ = id => document.getElementById(id);
+
+let iconBase64 = "";
+let splashBase64 = "";
+let busy = false;
+
+function showNotice(section) {
+  alert(section + " belum tersedia pada versi ini.");
 }
 
-function notice(section) {
-  alert(section + ' is not available yet.');
+function showResult(message, type) {
+  const result = $("result");
+  result.style.display = "block";
+  result.className = "result " + (type || "");
+  result.textContent = message;
 }
 
-document.getElementById('icon').addEventListener('change', event => {
+function setProgress(percent, message) {
+  $("progress").style.display = "block";
+  $("progressBar").style.width = percent + "%";
+  $("buildStatus").textContent = message || "";
+}
+
+function fileToCompressedBase64(file, maxWidth, maxHeight, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error("Gagal membaca gambar."));
+
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onerror = () => reject(new Error("File gambar tidak valid."));
+
+      img.onload = () => {
+        const ratio = Math.min(
+          1,
+          maxWidth / img.width,
+          maxHeight / img.height
+        );
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * ratio));
+        canvas.height = Math.max(1, Math.round(img.height * ratio));
+
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        let output = canvas.toDataURL("image/jpeg", quality);
+
+        if (output.length > 25000) {
+          output = canvas.toDataURL("image/jpeg", 0.35);
+        }
+
+        if (output.length > 25000) {
+          reject(new Error("Gambar terlalu besar. Pilih gambar yang lebih sederhana."));
+          return;
+        }
+
+        resolve(output);
+      };
+
+      img.src = reader.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+$("icon").addEventListener("change", async event => {
   const file = event.target.files[0];
   if (!file) return;
 
-  if (!['image/png','image/jpeg','image/webp'].includes(file.type)) {
-    alert('Gunakan PNG, JPG, atau WEBP.');
-    event.target.value = '';
-    return;
+  try {
+    iconBase64 = await fileToCompressedBase64(file, 192, 192, 0.65);
+    $("iconPreview").innerHTML = '<img src="' + iconBase64 + '" alt="Icon">';
+    $("iconName").textContent = file.name + " — siap digunakan";
+  } catch (error) {
+    iconBase64 = "";
+    event.target.value = "";
+    alert(error.message);
   }
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('preview').innerHTML =
-      '<img src="' + e.target.result + '" alt="Application icon">';
-  };
-  reader.readAsDataURL(file);
 });
 
-async function build() {
-  const name = document.getElementById('appName').value.trim();
-  const pkg = document.getElementById('package').value.trim();
-  const website = document.getElementById('url').value.trim();
+$("splash").addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
 
-  const result = document.getElementById('result');
-  const button = document.getElementById('buildButton');
+  try {
+    splashBase64 = await fileToCompressedBase64(file, 360, 640, 0.55);
+    $("splashPreview").innerHTML = '<img src="' + splashBase64 + '" alt="Splash">';
+    $("splashName").textContent = file.name + " — siap digunakan";
+  } catch (error) {
+    splashBase64 = "";
+    event.target.value = "";
+    alert(error.message);
+  }
+});
 
-  result.className = 'result';
-  result.style.display = 'block';
+function validateForm() {
+  const name = $("appName").value.trim();
+  const pkg = $("package").value.trim();
+  const website = $("url").value.trim();
+  const version = $("version").value.trim();
 
-  if (!name) {
-    result.classList.add('error');
-    result.textContent = 'Application name is required.';
-    return;
+  if (!name) throw new Error("Nama aplikasi wajib diisi.");
+
+  if (!/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(pkg)) {
+    throw new Error("Package name tidak valid. Contoh: com.zora.app");
   }
 
-  if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(pkg)) {
-    result.classList.add('error');
-    result.textContent = 'Package identifier tidak valid.';
-    return;
+  if (!/^[0-9]+(\.[0-9]+){1,2}$/.test(version)) {
+    throw new Error("Format versi tidak valid. Contoh: 1.0.0");
   }
 
   let parsed;
 
   try {
     parsed = new URL(website);
-    if (parsed.protocol !== 'https:') {
-      throw new Error('Gunakan alamat HTTPS.');
-    }
-  } catch (error) {
-    result.classList.add('error');
-    result.textContent = error.message || 'Masukkan URL website HTTPS yang valid.';
-    return;
+  } catch {
+    throw new Error("Masukkan URL website yang valid.");
   }
 
-  button.disabled = true;
-  button.textContent = 'SUBMITTING BUILD...';
-  result.textContent = 'Mengirim permintaan build ke server...';
+  if (parsed.protocol !== "https:") {
+    throw new Error("Website harus menggunakan HTTPS.");
+  }
+
+  return {
+    appName: name,
+    packageName: pkg,
+    websiteUrl: parsed.href,
+    versionName: version,
+    orientation: $("orientation").value,
+    themeColor: $("themeColor").value,
+    splashDuration: Number($("splashDuration").value),
+    iconBase64,
+    splashBase64
+  };
+}
+
+async function checkBuild(requestId) {
+  const response = await fetch(
+    "/api/status?requestId=" + encodeURIComponent(requestId),
+    { cache: "no-store" }
+  );
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || "Gagal membaca status build.");
+  }
+
+  return data;
+}
+
+function addDownloadButton(requestId) {
+  const link = document.createElement("a");
+  link.href = "/api/download?requestId=" + encodeURIComponent(requestId);
+  link.textContent = "DOWNLOAD APK ↓";
+  link.style.display = "inline-block";
+  link.style.marginTop = "13px";
+  link.style.padding = "12px 18px";
+  link.style.background = "#f1f1ec";
+  link.style.color = "#20211f";
+  link.style.fontWeight = "800";
+  link.style.textDecoration = "none";
+  link.style.borderRadius = "2px";
+  link.setAttribute("download", "");
+
+  $("result").appendChild(document.createElement("br"));
+  $("result").appendChild(link);
+}
+
+async function monitorBuild(requestId) {
+  const started = Date.now();
+
+  while (Date.now() - started < 15 * 60 * 1000) {
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    const data = await checkBuild(requestId);
+
+    if (!data.found) {
+      setProgress(8, "Menunggu GitHub Actions memulai build...");
+      continue;
+    }
+
+    if (data.status === "queued") {
+      setProgress(12, "Build masuk antrean...");
+      continue;
+    }
+
+    if (data.status === "in_progress") {
+      setProgress(45, "Android sedang diproses...");
+      continue;
+    }
+
+    if (data.status === "completed") {
+      if (data.conclusion !== "success") {
+        throw new Error(
+          "Build gagal. Periksa log GitHub Actions: " +
+          (data.actionsUrl || "")
+        );
+      }
+
+      if (!data.artifactReady) {
+        setProgress(90, "Build selesai. Menyiapkan file APK...");
+        continue;
+      }
+
+      setProgress(100, "APK berhasil dibuat.");
+
+      showResult("BUILD BERHASIL. APK siap diunduh.", "success");
+      addDownloadButton(requestId);
+      return;
+    }
+  }
+
+  throw new Error(
+    "Waktu pemantauan habis. Build mungkin masih berjalan. Coba periksa lagi beberapa saat."
+  );
+}
+
+async function build() {
+  if (busy) return;
+
+  const button = $("buildButton");
 
   try {
-    const response = await fetch('/api/build', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        appName: name,
-        packageName: pkg,
-        websiteUrl: parsed.href
-      })
+    const payload = validateForm();
+
+    busy = true;
+    button.disabled = true;
+    button.textContent = "BUILDING...";
+    $("result").style.display = "none";
+    $("buildStatus").textContent = "";
+    setProgress(3, "Mengirim permintaan build...");
+
+    const response = await fetch("/api/build", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      throw new Error(data.error || data.message || 'HTTP ' + response.status);
+    if (!response.ok || !data.success || !data.requestId) {
+      throw new Error(
+        data.error || "Permintaan build gagal."
+      );
     }
 
-    result.classList.add('success');
-    result.textContent = 'Permintaan build berhasil dikirim. Buka GitHub Actions untuk memantau proses dan mengunduh APK setelah selesai.';
+    setProgress(8, "Permintaan diterima. Memantau proses build...");
 
-    const link = document.createElement('a');
-    link.href = 'https://github.com/pemainevos7-eng/web-to-app/actions';
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.textContent = 'OPEN BUILD HISTORY';
-
-    result.appendChild(document.createElement('br'));
-    result.appendChild(link);
+    await monitorBuild(data.requestId);
 
   } catch (error) {
-    result.classList.add('error');
-    result.textContent = 'BUILD REQUEST FAILED: ' + error.message;
+    showResult("BUILD FAILED: " + error.message, "error");
+    $("buildStatus").textContent = "Periksa konfigurasi dan server build.";
   } finally {
+    busy = false;
     button.disabled = false;
-    button.textContent = 'SUBMIT BUILD REQUEST →';
+    button.textContent = "BUILD ANDROID APK →";
   }
 }
 </script>
