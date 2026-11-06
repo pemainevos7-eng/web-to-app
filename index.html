@@ -5,554 +5,753 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f4f4f1">
-<title>ZORA BUILDER</title>
+<title>ZORA BUILDER — Web to APK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono&display=swap');
-:root{--bg:#f4f4f1;--white:#fff;--ink:#20211f;--muted:#85867f;--line:#e7e7e1;--green:#26734d;--red:#a33d36}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
+:root{
+  --bg:#f4f4f1;--panel:#fff;--ink:#20211f;--muted:#858780;
+  --line:#e7e8e2;--soft:#f7f7f4;--accent:#242621;
+  --green:#287a50;--red:#bd4545;--yellow:#a87824;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",sans-serif}
 button,input,select{font:inherit}
 button{cursor:pointer}
-header{height:65px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px;position:sticky;top:0;z-index:5}
-.logo{font-size:16px;font-weight:800;letter-spacing:-.7px;display:flex;align-items:center;gap:10px}
-.logo-box{background:#20211f;color:white;width:29px;height:29px;display:grid;place-items:center}
-.logo small{font-size:11px;color:#999;font-weight:500;letter-spacing:1px}
-.top-right{font:10px 'DM Mono';color:#85867f}
-.shell{max-width:1200px;margin:auto;display:grid;grid-template-columns:210px 1fr;min-height:calc(100vh - 65px)}
-aside{border-right:1px solid var(--line);padding:28px 14px;background:#f8f8f5}
-.nav-label{font:9px 'DM Mono';letter-spacing:1.5px;color:#a1a199;padding:0 12px;margin:10px 0}
-.nav{width:100%;padding:12px;background:none;border:0;text-align:left;font-size:12px;color:#777;margin:2px 0;border-radius:3px}
-.nav.active{background:#e9e9e4;color:#20211f;font-weight:700}
-main{padding:37px 45px 90px;max-width:950px;width:100%}
-.crumb{font:10px 'DM Mono';color:#999;margin-bottom:24px}
-.heading{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:25px}
-h1{font-size:32px;letter-spacing:-1.5px}
-.heading p{font-size:12px;color:var(--muted);margin-top:7px}
-.tag{border:1px solid var(--line);background:white;padding:8px;font:9px 'DM Mono';color:#777}
-.notice{background:#ededE8;border:1px solid #e2e2dc;padding:14px 16px;font-size:11px;color:#686960;line-height:1.7;margin-bottom:20px}
-.notice b{color:#242520}
-.panel{background:white;border:1px solid var(--line);margin-bottom:15px}
-.panel-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
-.panel-head b{font-size:13px}
-.panel-head small{display:block;color:#999;font-size:10px;margin-top:4px}
-.step{font:10px 'DM Mono';color:#aaa}
+.layout{min-height:100vh;display:flex}
+.sidebar{width:238px;position:fixed;inset:0 auto 0 0;background:#fff;border-right:1px solid var(--line);padding:25px 17px;display:flex;flex-direction:column;z-index:5}
+.brand{display:flex;align-items:center;gap:11px;padding:0 8px 30px}
+.brand-mark{width:34px;height:34px;background:#22231f;color:white;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:14px}
+.brand-name{font-size:15px;font-weight:800;letter-spacing:-.5px}
+.brand-sub{font:10px "DM Mono";color:var(--muted);margin-top:2px}
+.nav-label{font:10px "DM Mono";color:#a0a198;letter-spacing:1.3px;padding:0 10px;margin:13px 0 9px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:9px;color:#777970;font-size:13px;font-weight:600;display:flex;align-items:center;gap:11px}
+.nav button:hover{background:var(--soft);color:var(--ink)}
+.nav button.active{background:#f0f0ec;color:#20211f}
+.nav-icon{width:18px;text-align:center;font-size:15px}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--line);padding:16px 7px 0}
+.connection{display:flex;align-items:center;gap:8px;font-size:11px;color:#777970}
+.dot{width:7px;height:7px;background:#42a66c;border-radius:50%;display:inline-block}
+.sidebar-version{font:10px "DM Mono";color:#a3a49c;margin-top:10px}
+.main{margin-left:238px;width:calc(100% - 238px);min-height:100vh}
+.topbar{height:66px;background:rgba(255,255,255,.82);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:4;backdrop-filter:blur(12px)}
+.breadcrumb{font-size:12px;color:var(--muted)}
+.breadcrumb strong{color:var(--ink)}
+.top-right{display:flex;align-items:center;gap:12px}
+.status-pill{border:1px solid var(--line);border-radius:30px;padding:7px 11px;font:10px "DM Mono";color:#777970;background:#fff}
+.avatar{width:30px;height:30px;border-radius:9px;background:#252620;color:white;display:grid;place-items:center;font-size:11px;font-weight:700}
+.content{max-width:1160px;margin:auto;padding:36px 34px 70px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:15px}
+.eyebrow{font:10px "DM Mono";color:#9a9c93;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+h1{font-size:27px;letter-spacing:-1.2px;margin:0;font-weight:800}
+.subtitle{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6}
+.tag{font:10px "DM Mono";border:1px solid var(--line);border-radius:6px;padding:7px 9px;color:#777970;background:white}
+.builder-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.8fr);gap:18px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.panel-head{padding:19px 21px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.panel-title{font-size:13px;font-weight:700}
+.panel-desc{font-size:11px;color:var(--muted);margin-top:4px}
 .panel-body{padding:21px}
-.label{display:block;font-size:11px;font-weight:700;margin-bottom:8px}
-.input{width:100%;height:44px;border:1px solid #e3e3dd;background:#fbfbf9;padding:0 12px;outline:none;border-radius:2px;font-size:12px;color:#222}
-.input:focus{border-color:#777}
-.input::placeholder{color:#b4b4ad}
 .field{margin-bottom:19px}
-.hint{font-size:10px;color:#999;margin-top:7px;line-height:1.6}
-.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:22px}
-.mode{background:white;border:1px solid var(--line);text-align:left;padding:13px;min-height:78px}
-.mode.active{border:1px solid #292a26;background:#f5f5f1;box-shadow:inset 0 0 0 1px #292a26}
-.mode:disabled{opacity:.45;cursor:not-allowed}
-.mode b{display:block;font-size:11px;margin-bottom:7px}
-.mode small{font-size:9px;color:#999;line-height:1.5}
-.upload{min-height:90px;border:1px dashed #d4d4cc;background:#fafaf8;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:15px;cursor:pointer;text-align:center}
-.upload b{font-size:11px}
-.upload small{font-size:9px;color:#999}
-.upload input{display:none}
-.file-name{font-size:10px;color:#666;margin-top:7px;overflow-wrap:anywhere}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:11px;font-weight:700;margin-bottom:8px}
+.field small{display:block;color:var(--muted);font-size:10px;margin-top:6px;line-height:1.5}
+input[type=text],input[type=url],input[type=number],select{
+ width:100%;height:42px;border:1px solid var(--line);border-radius:8px;
+ padding:0 12px;background:#fff;color:var(--ink);outline:none;font-size:12px;
+}
+input:focus,select:focus{border-color:#8d9084;box-shadow:0 0 0 3px #2426210b}
+input::placeholder{color:#b2b3ac}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.icon-row{display:flex;align-items:center;gap:15px}
-.icon-preview{height:64px;width:64px;background:#eee;border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;flex-shrink:0}
-.icon-preview img{width:100%;height:100%;object-fit:cover}
-.icon-preview b{font-size:21px}
-.splash-preview{width:100%;max-width:140px;aspect-ratio:9/16;background:#20211f;border:1px solid var(--line);overflow:hidden;margin-top:10px;display:grid;place-items:center;color:white;font-size:11px}
-.splash-preview img{width:100%;height:100%;object-fit:contain}
-.build{background:#22231f;color:white;padding:24px;margin-top:20px}
-.build-head{display:flex;justify-content:space-between;align-items:center}
-.build h3{font-size:15px}
-.build-head small{font:9px 'DM Mono';color:#aaa}
-.build p{font-size:11px;color:#aaa;line-height:1.7;margin:13px 0 19px}
-.build button{height:47px;width:100%;border:0;background:#f1f1ec;font-size:11px;font-weight:800}
-.build button:disabled{opacity:.55;cursor:wait}
-.result{display:none;border-top:1px solid #444;padding-top:14px;margin-top:14px;font-size:11px;line-height:1.8;color:#ddd;overflow-wrap:anywhere}
-.result.success{color:#d5eadc}
-.result.error{color:#ffd2cd}
-.result a{color:white;display:inline-block;margin-top:10px;text-decoration:underline}
-.progress{height:5px;background:#494a45;margin-top:14px;overflow:hidden;display:none}
-.progress-bar{height:100%;width:0;background:#d8d8ce;transition:width .3s}
-footer{display:flex;justify-content:space-between;margin-top:30px;font:9px 'DM Mono';color:#aaa}
+.upload{border:1px dashed #d4d5ce;border-radius:10px;padding:13px;display:flex;align-items:center;gap:12px;min-height:76px;background:#fcfcfa}
+.upload-preview{width:43px;height:43px;border-radius:9px;background:#efefeb;display:grid;place-items:center;overflow:hidden;flex-shrink:0;color:#999}
+.upload-preview img{width:100%;height:100%;object-fit:cover}
+.upload-info{min-width:0;flex:1}
+.upload-info strong{font-size:11px;display:block}
+.upload-info span{font-size:10px;color:var(--muted);display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-btn{border:1px solid var(--line);background:white;border-radius:7px;padding:8px 10px;font-size:10px;font-weight:700}
+input[type=file]{display:none}
+.color-row{display:flex;gap:9px;align-items:center}
+input[type=color]{width:43px;height:40px;border:1px solid var(--line);border-radius:8px;padding:3px;background:white}
+.color-row input[type=text]{flex:1}
+.primary{border:0;background:#242621;color:white;border-radius:9px;padding:13px 17px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;transition:.2s}
+.primary:hover{background:#41433b;transform:translateY(-1px)}
+.primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.secondary{border:1px solid var(--line);background:white;color:var(--ink);border-radius:8px;padding:10px 13px;font-size:11px;font-weight:700}
+.secondary:hover{background:var(--soft)}
+.note{font-size:10px;color:var(--muted);line-height:1.6;margin-top:11px}
+.side-stack{display:flex;flex-direction:column;gap:15px}
+.preview{background:#22231f;border-radius:12px;padding:20px;color:#fff;min-height:210px;position:relative;overflow:hidden}
+.preview:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff13;border-radius:50%;right:-65px;top:-75px;box-shadow:0 0 0 25px #ffffff08,0 0 0 50px #ffffff05}
+.preview-label{font:9px "DM Mono";letter-spacing:1.4px;color:#aaa99f}
+.phone{width:110px;height:145px;background:#f6f6f1;border-radius:17px;margin:18px auto 0;padding:8px;border:3px solid #5a5b54;position:relative;z-index:1}
+.phone-screen{width:100%;height:100%;border-radius:10px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#222;overflow:hidden}
+.phone-screen img{width:40px;height:40px;object-fit:cover;border-radius:9px;margin-bottom:8px}
+.phone-screen b{font-size:9px;max-width:85px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phone-screen small{font-size:7px;color:#888;margin-top:4px}
+.preview-foot{font:9px "DM Mono";color:#aaa99f;text-align:center;margin-top:10px;position:relative;z-index:1}
+.info-card{padding:17px 18px}
+.info-title{font-size:12px;font-weight:700;margin-bottom:13px}
+.info-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0ec;font-size:10px}
+.info-row:last-child{border:0;padding-bottom:0}
+.info-row span:first-child{color:var(--muted)}
+.info-row span:last-child{font-family:"DM Mono";text-align:right;overflow-wrap:anywhere}
+.build-panel{margin-top:18px}
+.build-empty{padding:22px;text-align:center;color:var(--muted);font-size:11px}
+.build-status{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700}
+.status-icon{width:28px;height:28px;border-radius:8px;background:#f0f0ec;display:grid;place-items:center}
+.progress{height:5px;background:#edeee8;border-radius:9px;overflow:hidden;margin:17px 0 8px}
+.progress-bar{height:100%;width:0;background:#35372f;transition:width .4s}
+.progress-meta{display:flex;justify-content:space-between;font:10px "DM Mono";color:var(--muted)}
+.activity{margin-top:20px;border-top:1px solid var(--line);padding-top:15px}
+.activity-head{font:10px "DM Mono";letter-spacing:1px;color:#96988f;margin-bottom:10px}
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #f3f3ef}
+.activity-mark{width:17px;height:17px;border-radius:50%;border:1px solid #dfe0d9;display:grid;place-items:center;font-size:9px;flex-shrink:0;color:#999}
+.activity-mark.success{background:#eaf4ed;border-color:#cce5d3;color:var(--green)}
+.activity-mark.failure{background:#f9eeee;border-color:#efd0d0;color:var(--red)}
+.activity-mark.running{border:2px solid #777;background:#f4f4f1}
+.activity-text{flex:1;min-width:0}
+.activity-text strong{display:block;font-size:11px;font-weight:600;overflow-wrap:anywhere}
+.activity-text small{font:9px "DM Mono";color:var(--muted);display:block;margin-top:3px}
+.result-actions{display:flex;gap:8px;margin-top:16px}
+.result-actions a{display:inline-flex;text-decoration:none}
+.result-actions .primary{width:auto;padding:10px 14px}
+.page-section{display:none}
+.page-section.active{display:block}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;font:10px "DM Mono";color:#96988f;padding:12px;border-bottom:1px solid var(--line)}
+.data-table td{font-size:11px;padding:13px 12px;border-bottom:1px solid #f0f0ec;vertical-align:middle}
+.empty-state{text-align:center;padding:45px 15px;color:var(--muted);font-size:12px}
+.empty-state strong{display:block;color:var(--ink);font-size:13px;margin-bottom:6px}
+.section-card{background:white;border:1px solid var(--line);border-radius:var(--radius);padding:21px;margin-bottom:15px}
+.section-card h3{font-size:13px;margin:0 0 7px}
+.section-card p{font-size:11px;color:var(--muted);line-height:1.7;margin:0}
+.setting-line{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:14px 0;border-bottom:1px solid #f0f0ec}
+.setting-line:last-child{border:0}
+.setting-line strong{font-size:11px;display:block}
+.setting-line small{font-size:10px;color:var(--muted);display:block;margin-top:4px}
+.setting-line select{width:150px}
+.doc-list{font-size:11px;color:#6f7169;line-height:1.9;padding-left:18px}
+.toast{position:fixed;bottom:20px;right:20px;background:#252620;color:white;padding:12px 16px;border-radius:9px;font-size:11px;z-index:20;box-shadow:0 8px 30px #0002;opacity:0;transform:translateY(8px);pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translateY(0)}
 .mobile-nav{display:none}
-@media(max-width:700px){
-header{height:58px;padding:0 16px}
-.shell{display:block}
-aside{display:none}
-main{padding:25px 15px 95px}
-h1{font-size:27px}
-.heading{align-items:flex-start}
-.heading p{max-width:230px;line-height:1.6}
-.tag{font-size:8px;padding:7px}
-.panel-head{padding:16px}
-.panel-body{padding:16px}
-.modes{gap:6px}
-.mode{padding:10px 8px;min-height:85px}
-.mode b{font-size:10px}
-.mode small{font-size:9px}
-.two{grid-template-columns:1fr;gap:0}
-.build{padding:20px 16px}
-.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:62px;background:#fff;border-top:1px solid var(--line);justify-content:space-around;align-items:center;z-index:5}
-.mobile-nav button{border:0;background:none;color:#888;font-size:10px;display:grid;gap:4px;text-align:center}
-.mobile-nav button.active{color:#222;font-weight:700}
+@media(max-width:900px){
+ .sidebar{width:205px}.main{margin-left:205px;width:calc(100% - 205px)}
+ .builder-grid{grid-template-columns:1fr}.side-stack{display:grid;grid-template-columns:1fr 1fr}
+}
+@media(max-width:650px){
+ .sidebar{display:none}.main{margin:0;width:100%;padding-bottom:65px}
+ .topbar{height:57px;padding:0 17px}.content{padding:25px 15px 35px}
+ .page-head{margin-bottom:20px}h1{font-size:23px}.subtitle{font-size:11px}
+ .panel-body{padding:16px}.panel-head{padding:16px}
+ .side-stack{display:flex}.two{gap:9px}
+ .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:61px;background:#fff;border-top:1px solid var(--line);z-index:10;justify-content:space-around;padding:5px 4px calc(5px + env(safe-area-inset-bottom))}
+ .mobile-nav button{border:0;background:none;color:#92938c;font-size:9px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:55px}
+ .mobile-nav button.active{color:#20211f;font-weight:700}
+ .mobile-nav span{font-size:17px}
+ .data-table th,.data-table td{padding:10px 7px;font-size:10px}
+ .toast{left:15px;right:15px;bottom:75px;text-align:center}
 }
 </style>
 </head>
 <body>
-
-<header>
-<div class="logo"><div class="logo-box">Z</div>ZORA <small>BUILDER</small></div>
-<div class="top-right">APPLICATION STUDIO / 2.0</div>
-</header>
-
-<div class="shell">
-<aside>
-<div class="nav-label">WORKSPACE</div>
-<button class="nav active">01 &nbsp; Web to APK</button>
-<button class="nav" onclick="showNotice('Build history')">02 &nbsp; Build history</button>
-<button class="nav" onclick="showNotice('Projects')">03 &nbsp; Projects</button>
-<div class="nav-label">GENERAL</div>
-<button class="nav" onclick="showNotice('Settings')">04 &nbsp; Settings</button>
-<button class="nav" onclick="showNotice('Documentation')">05 &nbsp; Documentation</button>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">Z</div>
+    <div><div class="brand-name">ZORA BUILDER</div><div class="brand-sub">ANDROID APP STUDIO</div></div>
+  </div>
+  <div class="nav-label">WORKSPACE</div>
+  <nav class="nav">
+    <button class="active" data-page="builder"><span class="nav-icon">▦</span>Web to APK</button>
+    <button data-page="projects"><span class="nav-icon">▣</span>Projects</button>
+    <button data-page="history"><span class="nav-icon">◷</span>Build history</button>
+  </nav>
+  <div class="nav-label">PREFERENCES</div>
+  <nav class="nav">
+    <button data-page="settings"><span class="nav-icon">⚙</span>Settings</button>
+    <button data-page="docs"><span class="nav-icon">⌘</span>Documentation</button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="connection"><i class="dot"></i> Build service connected</div>
+    <div class="sidebar-version">ZORA BUILDER · V1.0.0</div>
+  </div>
 </aside>
 
-<main>
-<div class="crumb">WORKSPACE / <b>WEB TO APK</b></div>
+<main class="main">
+<header class="topbar">
+  <div class="breadcrumb">Workspace / <strong id="crumb">Web to APK</strong></div>
+  <div class="top-right"><div class="status-pill">● SYSTEM ONLINE</div><div class="avatar">Z</div></div>
+</header>
 
-<div class="heading">
-<div>
-<h1>Web to APK</h1>
-<p>Convert a website into an Android application.</p>
-</div>
-<div class="tag">BUILD / 002</div>
-</div>
+<div class="content">
+<section class="page-section active" id="page-builder">
+  <div class="page-head">
+    <div><div class="eyebrow">ANDROID APPLICATION BUILDER</div><h1>Build your application.</h1><div class="subtitle">Convert any website into an Android application.</div></div>
+    <div class="tag">WEB → APK</div>
+  </div>
 
-<div class="notice">
-<b>PROJECT CONFIGURATION</b><br>
-Atur website, identitas aplikasi, ikon, splash screen, dan konfigurasi Android.
-</div>
+  <div class="builder-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-head"><div><div class="panel-title">Application configuration</div><div class="panel-desc">Configure your Android application.</div></div><span class="tag">01 / CONFIG</span></div>
+        <div class="panel-body">
+          <div class="field">
+            <label for="website">Website URL</label>
+            <input id="website" type="url" placeholder="https://example.com" autocomplete="url">
+            <small>Website harus dapat diakses melalui internet.</small>
+          </div>
+          <div class="two">
+            <div class="field"><label for="appName">Application name</label><input id="appName" type="text" maxlength="50" placeholder="My Application"></div>
+            <div class="field"><label for="packageName">Package name</label><input id="packageName" type="text" placeholder="com.example.app"></div>
+          </div>
+          <div class="field"><label for="versionName">Version name</label><input id="versionName" type="text" value="1.0.0" placeholder="1.0.0"></div>
 
-<section class="panel">
-<div class="panel-head">
-<div><b>Source</b><small>Select your website source</small></div>
-<span class="step">01 / 04</span>
-</div>
-<div class="panel-body">
-<div class="modes">
-<button class="mode active" type="button">
-<b>Website URL</b><small>Existing website</small>
-</button>
-<button class="mode" type="button" disabled>
-<b>HTML File</b><small>Coming later</small>
-</button>
-<button class="mode" type="button" disabled>
-<b>ZIP Archive</b><small>Coming later</small>
-</button>
-</div>
-<label class="label" for="url">Website address</label>
-<input class="input" id="url" type="url" placeholder="https://example.com">
-<div class="hint">Masukkan alamat HTTPS website yang lu miliki atau punya izin untuk dikemas.</div>
-</div>
+          <div class="field">
+            <label>Application icon</label>
+            <div class="upload">
+              <div class="upload-preview" id="iconPreview">◇</div>
+              <div class="upload-info"><strong>App icon</strong><span id="iconName">PNG or JPG · Select an image</span></div>
+              <label class="upload-btn" for="iconFile">Choose file</label>
+              <input id="iconFile" type="file" accept="image/png,image/jpeg,image/webp">
+            </div>
+          </div>
+          <div class="field">
+            <label>Splash screen</label>
+            <div class="upload">
+              <div class="upload-preview" id="splashPreview">▧</div>
+              <div class="upload-info"><strong>Splash image</strong><span id="splashName">PNG or JPG · Select an image</span></div>
+              <label class="upload-btn" for="splashFile">Choose file</label>
+              <input id="splashFile" type="file" accept="image/png,image/jpeg,image/webp">
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--line);padding-top:19px;margin-top:6px">
+            <div class="eyebrow">ANDROID SETTINGS</div>
+            <div class="two">
+              <div class="field"><label for="orientation">Screen orientation</label><select id="orientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div>
+              <div class="field"><label for="splashDuration">Splash duration</label><select id="splashDuration"><option value="1000">1 second</option><option value="2000" selected>2 seconds</option><option value="3000">3 seconds</option><option value="5000">5 seconds</option></select></div>
+            </div>
+            <div class="field">
+              <label for="themeColor">Theme color</label>
+              <div class="color-row"><input id="colorPicker" type="color" value="#202020"><input id="themeColor" type="text" value="#202020" maxlength="7"></div>
+              <small>Warna utama aplikasi Android.</small>
+            </div>
+          </div>
+          <button class="primary" id="buildBtn" type="button"><span>↗</span> Build Android APK</button>
+          <div class="note">Build diproses melalui GitHub Actions. Jangan tutup halaman sampai request build berhasil dikirim; proses tetap berjalan di server GitHub.</div>
+        </div>
+      </div>
+
+      <div class="panel build-panel" id="buildPanel">
+        <div class="panel-head"><div><div class="panel-title">Build activity</div><div class="panel-desc">Live workflow status from GitHub Actions.</div></div><span class="tag" id="buildTag">IDLE</span></div>
+        <div id="buildContent" class="build-empty">Belum ada proses build. Konfigurasi aplikasi lalu tekan Build Android APK.</div>
+      </div>
+    </div>
+
+    <div class="side-stack">
+      <div class="preview">
+        <div class="preview-label">LIVE APP PREVIEW</div>
+        <div class="phone"><div class="phone-screen" id="phoneScreen"><div style="width:40px;height:40px;border-radius:10px;background:#e9e9e4;margin-bottom:8px"></div><b id="previewName">Your App</b><small>Android application</small></div></div>
+        <div class="preview-foot">PREVIEW · NOT FINAL RENDER</div>
+      </div>
+      <div class="panel info-card">
+        <div class="info-title">Build configuration</div>
+        <div class="info-row"><span>Platform</span><span>Android</span></div>
+        <div class="info-row"><span>Output</span><span>APK</span></div>
+        <div class="info-row"><span>Framework</span><span>WebView</span></div>
+        <div class="info-row"><span>Build engine</span><span>GitHub Actions</span></div>
+        <div class="info-row"><span>Java</span><span>17</span></div>
+        <div class="info-row"><span>Target SDK</span><span>35</span></div>
+      </div>
+      <div class="panel info-card">
+        <div class="info-title">Before you build</div>
+        <div class="note" style="margin:0">Pastikan URL website benar, package name unik, dan gambar tidak melebihi batas ukuran API. Hasil APK akan tersedia setelah workflow selesai dan artifact terdeteksi.</div>
+      </div>
+    </div>
+  </div>
 </section>
 
-<section class="panel">
-<div class="panel-head">
-<div><b>Application details</b><small>Android application identity</small></div>
-<span class="step">02 / 04</span>
-</div>
-<div class="panel-body">
-<div class="field">
-<label class="label" for="appName">Application name</label>
-<input class="input" id="appName" placeholder="ZORA APP" maxlength="40">
-</div>
-<div class="field">
-<label class="label" for="package">Package identifier</label>
-<input class="input" id="package" placeholder="com.zora.app">
-<div class="hint">Contoh: com.company.application</div>
-</div>
-<div class="field">
-<label class="label" for="version">Version name</label>
-<input class="input" id="version" value="1.0.0">
-</div>
-</div>
+<section class="page-section" id="page-projects">
+  <div class="page-head"><div><div class="eyebrow">WORKSPACE</div><h1>Projects</h1><div class="subtitle">Daftar konfigurasi aplikasi yang pernah disimpan di browser ini.</div></div><button class="secondary" id="newProject">＋ New project</button></div>
+  <div class="panel"><div class="panel-head"><div><div class="panel-title">Saved projects</div><div class="panel-desc">Data tersimpan secara lokal di perangkat ini.</div></div><span class="tag" id="projectCount">0 PROJECTS</span></div><div id="projectsContent" class="empty-state"><strong>No projects yet</strong>Build aplikasi untuk menyimpan project pertamamu.</div></div>
 </section>
 
-<section class="panel">
-<div class="panel-head">
-<div><b>Application icon</b><small>Launcher appearance</small></div>
-<span class="step">03 / 04</span>
-</div>
-<div class="panel-body">
-<div class="icon-row">
-<div class="icon-preview" id="iconPreview"><b>Z</b></div>
-<div style="flex:1">
-<label class="label">Icon image</label>
-<label class="upload">
-<b>Choose icon from gallery</b>
-<small>PNG, JPG, WEBP</small>
-<input type="file" id="icon" accept="image/png,image/jpeg,image/webp">
-</label>
-<div class="file-name" id="iconName">No icon selected</div>
-</div>
-</div>
-</div>
+<section class="page-section" id="page-history">
+  <div class="page-head"><div><div class="eyebrow">BUILD RECORDS</div><h1>Build history</h1><div class="subtitle">Riwayat build yang dibuat dari browser ini.</div></div><button class="secondary" id="clearHistory">Clear history</button></div>
+  <div class="panel"><div class="panel-head"><div><div class="panel-title">Recent builds</div><div class="panel-desc">Riwayat status dan tautan hasil APK.</div></div><span class="tag" id="historyCount">0 BUILDS</span></div><div id="historyContent" class="empty-state"><strong>No build history</strong>Aktivitas build akan muncul di sini.</div></div>
 </section>
 
-<section class="panel">
-<div class="panel-head">
-<div><b>Splash screen</b><small>Opening screen appearance</small></div>
-<span class="step">04 / 04</span>
-</div>
-<div class="panel-body">
-<label class="upload">
-<b>Choose splash screen</b>
-<small>PNG, JPG, WEBP</small>
-<input type="file" id="splash" accept="image/png,image/jpeg,image/webp">
-</label>
-<div class="file-name" id="splashName">No splash screen selected</div>
-<div class="splash-preview" id="splashPreview">SPLASH PREVIEW</div>
-<div class="hint">Gambar akan ditampilkan saat aplikasi dibuka.</div>
-</div>
+<section class="page-section" id="page-settings">
+  <div class="page-head"><div><div class="eyebrow">PREFERENCES</div><h1>Settings</h1><div class="subtitle">Atur preferensi tampilan dan data lokal ZORA BUILDER.</div></div></div>
+  <div class="section-card">
+    <h3>Builder preferences</h3><p>Preferensi ini berlaku pada antarmuka builder di browser ini.</p>
+    <div class="setting-line"><div><strong>Default orientation</strong><small>Orientasi awal saat membuka builder.</small></div><select id="prefOrientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div>
+    <div class="setting-line"><div><strong>Default splash duration</strong><small>Durasi splash awal.</small></div><select id="prefSplash"><option value="1000">1 second</option><option value="2000">2 seconds</option><option value="3000">3 seconds</option><option value="5000">5 seconds</option></select></div>
+    <div class="setting-line"><div><strong>Remember form values</strong><small>Simpan konfigurasi terakhir di browser ini.</small></div><input id="rememberForm" type="checkbox" checked></div>
+  </div>
+  <div class="section-card">
+    <h3>Local data</h3><p>Project dan riwayat build tersimpan di penyimpanan browser. Menghapus data tidak akan menghapus artifact di GitHub Actions.</p>
+    <div style="margin-top:15px"><button class="secondary" id="clearLocal">Clear local projects and history</button></div>
+  </div>
 </section>
 
-<section class="panel">
-<div class="panel-head">
-<div><b>Android settings</b><small>Application behavior</small></div>
-<span class="step">05 / 05</span>
-</div>
-<div class="panel-body">
-<div class="two">
-<div class="field">
-<label class="label" for="orientation">Orientation</label>
-<select class="input" id="orientation">
-<option value="portrait">Portrait</option>
-<option value="landscape">Landscape</option>
-</select>
-</div>
-<div class="field">
-<label class="label" for="theme">Application theme</label>
-<select class="input" id="theme">
-<option value="system">System default</option>
-<option value="light">Light</option>
-<option value="dark">Dark</option>
-</select>
-</div>
-</div>
-<div class="two">
-<div class="field">
-<label class="label" for="splashDuration">Splash duration</label>
-<select class="input" id="splashDuration">
-<option value="1000">1 second</option>
-<option value="2000" selected>2 seconds</option>
-<option value="3000">3 seconds</option>
-<option value="5000">5 seconds</option>
-</select>
-</div>
-<div class="field">
-<label class="label" for="themeColor">Theme color</label>
-<input class="input" id="themeColor" type="color" value="#202020" style="padding:5px">
-</div>
-</div>
-<div class="hint">APK debug akan dibuat otomatis. Build ini membutuhkan koneksi internet dan izin akses website.</div>
-</div>
+<section class="page-section" id="page-docs">
+  <div class="page-head"><div><div class="eyebrow">HELP CENTER</div><h1>Documentation</h1><div class="subtitle">Panduan singkat penggunaan ZORA BUILDER.</div></div></div>
+  <div class="section-card"><h3>01 — Configure your application</h3><p>Masukkan alamat website lengkap dengan https://, nama aplikasi, package name, dan versi aplikasi. Package name harus unik, misalnya com.brand.aplikasi.</p></div>
+  <div class="section-card"><h3>02 — Upload assets</h3><p>Pilih icon dan splash screen dari perangkat. Gunakan gambar PNG, JPG, atau WebP. API saat ini membatasi string gambar Base64 hingga 25.000 karakter.</p></div>
+  <div class="section-card"><h3>03 — Start build</h3><p>Tekan Build Android APK. Server akan mengirim workflow_dispatch ke GitHub Actions. Status job dan langkah workflow diperbarui secara berkala.</p></div>
+  <div class="section-card"><h3>04 — Download APK</h3><p>Jika workflow selesai dengan sukses dan artifact tersedia, tombol download akan muncul. Jika build gagal, periksa detail workflow melalui tautan GitHub Actions.</p></div>
+  <div class="section-card"><h3>Build requirements</h3><ul class="doc-list"><li>Website dapat diakses melalui internet.</li><li>GitHub Actions workflow build.yml aktif.</li><li>Vercel environment variable GITHUB_TOKEN sudah dipasang.</li><li>Token GitHub memiliki izin Actions yang diperlukan.</li><li>api/build.js, api/status.js, dan api/download.js tersedia.</li></ul></div>
 </section>
-
-<section class="build">
-<div class="build-head">
-<h3>Build application</h3>
-<small>FINAL STEP</small>
 </div>
-<p>Kirim konfigurasi ke server. Proses build berjalan otomatis dan APK bisa diunduh langsung dari halaman ini.</p>
-<button id="buildButton" type="button" onclick="build()">BUILD ANDROID APK →</button>
-<div class="progress" id="progress">
-<div class="progress-bar" id="progressBar"></div>
-</div>
-<div class="status" id="buildStatus"></div>
-<div class="result" id="result" aria-live="polite"></div>
-</section>
-
-<footer>
-<span>ZORA BUILDER / 2026</span>
-<span>ANDROID BUILD SERVICE</span>
-</footer>
 </main>
 </div>
 
 <nav class="mobile-nav">
-<button class="active">01<br>Builder</button>
-<button onclick="showNotice('Projects')">02<br>Projects</button>
-<button onclick="showNotice('History')">03<br>History</button>
-<button onclick="showNotice('Settings')">04<br>Settings</button>
+  <button class="active" data-page="builder"><span>▦</span>Builder</button>
+  <button data-page="projects"><span>▣</span>Projects</button>
+  <button data-page="history"><span>◷</span>History</button>
+  <button data-page="settings"><span>⚙</span>Settings</button>
+  <button data-page="docs"><span>⌘</span>Docs</button>
 </nav>
+<div class="toast" id="toast"></div>
 
 <script>
-const $ = id => document.getElementById(id);
+(() => {
+"use strict";
 
+const $ = id => document.getElementById(id);
+const STORE = {
+  projects:"zora_builder_projects_v1",
+  history:"zora_builder_history_v1",
+  prefs:"zora_builder_prefs_v1",
+  form:"zora_builder_form_v1"
+};
+
+let currentRequest = null;
+let pollTimer = null;
+let polling = false;
 let iconBase64 = "";
 let splashBase64 = "";
-let busy = false;
 
-function showNotice(section) {
-  alert(section + " belum tersedia pada versi ini.");
+function read(key, fallback){
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+  catch { return fallback; }
 }
-
-function showResult(message, type) {
-  const result = $("result");
-  result.style.display = "block";
-  result.className = "result " + (type || "");
-  result.textContent = message;
+function write(key, value){
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch { toast("Penyimpanan browser penuh atau tidak tersedia."); }
 }
-
-function setProgress(percent, message) {
-  $("progress").style.display = "block";
-  $("progressBar").style.width = percent + "%";
-  $("buildStatus").textContent = message || "";
+function toast(message){
+  const el=$("toast");
+  el.textContent=message;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer=setTimeout(()=>el.classList.remove("show"),2800);
 }
-
-function fileToCompressedBase64(file, maxWidth, maxHeight, quality) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onerror = () => reject(new Error("Gagal membaca gambar."));
-
-    reader.onload = () => {
-      const img = new Image();
-
-      img.onerror = () => reject(new Error("File gambar tidak valid."));
-
-      img.onload = () => {
-        const ratio = Math.min(
-          1,
-          maxWidth / img.width,
-          maxHeight / img.height
-        );
-
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(img.width * ratio));
-        canvas.height = Math.max(1, Math.round(img.height * ratio));
-
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        let output = canvas.toDataURL("image/jpeg", quality);
-
-        if (output.length > 25000) {
-          output = canvas.toDataURL("image/jpeg", 0.35);
-        }
-
-        if (output.length > 25000) {
-          reject(new Error("Gambar terlalu besar. Pilih gambar yang lebih sederhana."));
-          return;
-        }
-
-        resolve(output);
-      };
-
-      img.src = reader.result;
-    };
-
-    reader.readAsDataURL(file);
-  });
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
 }
-
-$("icon").addEventListener("change", async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  try {
-    iconBase64 = await fileToCompressedBase64(file, 192, 192, 0.65);
-    $("iconPreview").innerHTML = '<img src="' + iconBase64 + '" alt="Icon">';
-    $("iconName").textContent = file.name + " — siap digunakan";
-  } catch (error) {
-    iconBase64 = "";
-    event.target.value = "";
-    alert(error.message);
-  }
+function navigate(page){
+  document.querySelectorAll(".page-section").forEach(el=>el.classList.remove("active"));
+  const target=$("page-"+page);
+  if(target) target.classList.add("active");
+  document.querySelectorAll("[data-page]").forEach(btn=>btn.classList.toggle("active",btn.dataset.page===page));
+  const names={builder:"Web to APK",projects:"Projects",history:"Build history",settings:"Settings",docs:"Documentation"};
+  $("crumb").textContent=names[page]||"Workspace";
+  if(page==="projects") renderProjects();
+  if(page==="history") renderHistory();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll("[data-page]").forEach(btn=>{
+  btn.addEventListener("click",()=>navigate(btn.dataset.page));
 });
 
-$("splash").addEventListener("change", async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  try {
-    splashBase64 = await fileToCompressedBase64(file, 360, 640, 0.55);
-    $("splashPreview").innerHTML = '<img src="' + splashBase64 + '" alt="Splash">';
-    $("splashName").textContent = file.name + " — siap digunakan";
-  } catch (error) {
-    splashBase64 = "";
-    event.target.value = "";
-    alert(error.message);
-  }
-});
-
-function validateForm() {
-  const name = $("appName").value.trim();
-  const pkg = $("package").value.trim();
-  const website = $("url").value.trim();
-  const version = $("version").value.trim();
-
-  if (!name) throw new Error("Nama aplikasi wajib diisi.");
-
-  if (!/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(pkg)) {
-    throw new Error("Package name tidak valid. Contoh: com.zora.app");
-  }
-
-  if (!/^[0-9]+(\.[0-9]+){1,2}$/.test(version)) {
-    throw new Error("Format versi tidak valid. Contoh: 1.0.0");
-  }
-
-  let parsed;
-
-  try {
-    parsed = new URL(website);
-  } catch {
-    throw new Error("Masukkan URL website yang valid.");
-  }
-
-  if (parsed.protocol !== "https:") {
-    throw new Error("Website harus menggunakan HTTPS.");
-  }
-
+function formData(){
   return {
-    appName: name,
-    packageName: pkg,
-    websiteUrl: parsed.href,
-    versionName: version,
-    orientation: $("orientation").value,
-    themeColor: $("themeColor").value,
-    splashDuration: Number($("splashDuration").value),
-    iconBase64,
-    splashBase64
+    website:$("website").value.trim(),
+    appName:$("appName").value.trim(),
+    packageName:$("packageName").value.trim(),
+    versionName:$("versionName").value.trim(),
+    orientation:$("orientation").value,
+    splashDuration:$("splashDuration").value,
+    themeColor:$("themeColor").value.trim()
   };
 }
-
-async function checkBuild(requestId) {
-  const response = await fetch(
-    "/api/status?requestId=" + encodeURIComponent(requestId),
-    { cache: "no-store" }
-  );
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.error || "Gagal membaca status build.");
+function saveForm(){
+  if($("rememberForm").checked) write(STORE.form,formData());
+}
+function restoreForm(){
+  const data=read(STORE.form,{});
+  ["website","appName","packageName","versionName","orientation","splashDuration","themeColor"].forEach(key=>{
+    if(data[key]!==undefined && $(key)) $(key).value=data[key];
+  });
+  $("colorPicker").value=/^#[0-9a-fA-F]{6}$/.test($("themeColor").value)?$("themeColor").value:"#202020";
+  updatePreview();
+}
+function updatePreview(){
+  $("previewName").textContent=$("appName").value.trim()||"Your App";
+  const screen=$("phoneScreen");
+  screen.innerHTML="";
+  if(iconBase64){
+    const img=document.createElement("img");
+    img.src=iconBase64;
+    screen.appendChild(img);
+  }else{
+    const placeholder=document.createElement("div");
+    placeholder.style.cssText="width:40px;height:40px;border-radius:10px;background:#e9e9e4;margin-bottom:8px";
+    screen.appendChild(placeholder);
   }
-
-  return data;
+  const name=document.createElement("b");
+  name.textContent=$("appName").value.trim()||"Your App";
+  const sub=document.createElement("small");
+  sub.textContent="Android application";
+  screen.append(name,sub);
 }
+$("appName").addEventListener("input",updatePreview);
+$("colorPicker").addEventListener("input",()=>{
+  $("themeColor").value=$("colorPicker").value;
+  saveForm();
+});
+$("themeColor").addEventListener("input",()=>{
+  if(/^#[0-9a-fA-F]{6}$/.test($("themeColor").value)) $("colorPicker").value=$("themeColor").value;
+  saveForm();
+});
+["website","packageName","versionName","orientation","splashDuration"].forEach(id=>{
+  $(id).addEventListener("change",saveForm);
+  $(id).addEventListener("input",saveForm);
+});
 
-function addDownloadButton(requestId) {
-  const link = document.createElement("a");
-  link.href = "/api/download?requestId=" + encodeURIComponent(requestId);
-  link.textContent = "DOWNLOAD APK ↓";
-  link.style.display = "inline-block";
-  link.style.marginTop = "13px";
-  link.style.padding = "12px 18px";
-  link.style.background = "#f1f1ec";
-  link.style.color = "#20211f";
-  link.style.fontWeight = "800";
-  link.style.textDecoration = "none";
-  link.style.borderRadius = "2px";
-  link.setAttribute("download", "");
-
-  $("result").appendChild(document.createElement("br"));
-  $("result").appendChild(link);
-}
-
-async function monitorBuild(requestId) {
-  const started = Date.now();
-
-  while (Date.now() - started < 15 * 60 * 1000) {
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    const data = await checkBuild(requestId);
-
-    if (!data.found) {
-      setProgress(8, "Menunggu GitHub Actions memulai build...");
-      continue;
-    }
-
-    if (data.status === "queued") {
-      setProgress(12, "Build masuk antrean...");
-      continue;
-    }
-
-    if (data.status === "in_progress") {
-      setProgress(45, "Android sedang diproses...");
-      continue;
-    }
-
-    if (data.status === "completed") {
-      if (data.conclusion !== "success") {
-        throw new Error(
-          "Build gagal. Periksa log GitHub Actions: " +
-          (data.actionsUrl || "")
-        );
-      }
-
-      if (!data.artifactReady) {
-        setProgress(90, "Build selesai. Menyiapkan file APK...");
-        continue;
-      }
-
-      setProgress(100, "APK berhasil dibuat.");
-
-      showResult("BUILD BERHASIL. APK siap diunduh.", "success");
-      addDownloadButton(requestId);
+function readImage(file, callback){
+  if(!file) return;
+  if(!/^image\/(png|jpeg|webp)$/.test(file.type)){
+    toast("Format gambar harus PNG, JPG, atau WebP.");
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const result=String(reader.result||"");
+    if(result.length>25000){
+      toast("Gambar terlalu besar untuk batas API. Pilih gambar yang lebih kecil.");
       return;
     }
-  }
-
-  throw new Error(
-    "Waktu pemantauan habis. Build mungkin masih berjalan. Coba periksa lagi beberapa saat."
-  );
+    callback(result,file.name);
+  };
+  reader.onerror=()=>toast("Gagal membaca file gambar.");
+  reader.readAsDataURL(file);
 }
+$("iconFile").addEventListener("change",e=>{
+  readImage(e.target.files[0],(data,name)=>{
+    iconBase64=data;
+    $("iconName").textContent=name;
+    $("iconPreview").innerHTML=`<img src="${data}" alt="Icon preview">`;
+    updatePreview();
+  });
+});
+$("splashFile").addEventListener("change",e=>{
+  readImage(e.target.files[0],(data,name)=>{
+    splashBase64=data;
+    $("splashName").textContent=name;
+    $("splashPreview").innerHTML=`<img src="${data}" alt="Splash preview">`;
+  });
+});
 
-async function build() {
-  if (busy) return;
+function validate(data){
+  if(!data.website||!data.appName||!data.packageName){
+    return "URL website, nama aplikasi, dan package name wajib diisi.";
+  }
+  let url;
+  try{url=new URL(data.website)}catch{return "URL website tidak valid."}
+  if(!["http:","https:"].includes(url.protocol)) return "URL harus menggunakan HTTP atau HTTPS.";
+  if(data.appName.length>50) return "Nama aplikasi maksimal 50 karakter.";
+  if(!/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(data.packageName)) return "Format package name tidak valid.";
+  if(!/^[0-9]+(\.[0-9]+){1,2}$/.test(data.versionName)) return "Format versi tidak valid. Contoh: 1.0.0";
+  if(!/^#[0-9a-fA-F]{6}$/.test(data.themeColor)) return "Warna tema harus berupa HEX, contoh #202020.";
+  return "";
+}
+function updateBuildTag(text){$("buildTag").textContent=text.toUpperCase()}
+function statusLabel(status, conclusion){
+  if(conclusion==="success") return "SUCCESS";
+  if(conclusion==="failure"||conclusion==="cancelled"||conclusion==="timed_out") return "FAILED";
+  if(status==="in_progress") return "RUNNING";
+  if(status==="queued"||status==="requested"||status==="waiting") return "QUEUED";
+  return String(status||"PENDING").toUpperCase();
+}
+function markFor(status, conclusion){
+  if(conclusion==="success") return ["✓","success"];
+  if(conclusion==="failure"||conclusion==="cancelled"||conclusion==="timed_out") return ["!","failure"];
+  if(status==="in_progress") return ["·","running"];
+  return ["○",""];
+}
+function renderActivity(data){
+  const items=data.activities||[];
+  const content=$("buildContent");
+  const state=statusLabel(data.status,data.conclusion);
+  updateBuildTag(state);
+  let percent=0;
+  if(data.conclusion==="success") percent=100;
+  else if(data.conclusion==="failure"||data.conclusion==="cancelled") percent=100;
+  else if(data.status==="in_progress") percent=55;
+  else if(data.status==="queued"||!data.found) percent=8;
 
-  const button = $("buildButton");
-
-  try {
-    const payload = validateForm();
-
-    busy = true;
-    button.disabled = true;
-    button.textContent = "BUILDING...";
-    $("result").style.display = "none";
-    $("buildStatus").textContent = "";
-    setProgress(3, "Mengirim permintaan build...");
-
-    const response = await fetch("/api/build", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok || !data.success || !data.requestId) {
-      throw new Error(
-        data.error || "Permintaan build gagal."
-      );
+  if(items.length){
+    const completed=items.filter(x=>x.status==="completed").length;
+    const total=items.length;
+    if(data.conclusion!=="success" && data.conclusion!=="failure" && data.status==="in_progress"){
+      percent=Math.max(15,Math.min(94,Math.round((completed/Math.max(total,1))*100)));
     }
-
-    setProgress(8, "Permintaan diterima. Memantau proses build...");
-
-    await monitorBuild(data.requestId);
-
-  } catch (error) {
-    showResult("BUILD FAILED: " + error.message, "error");
-    $("buildStatus").textContent = "Periksa konfigurasi dan server build.";
-  } finally {
-    busy = false;
-    button.disabled = false;
-    button.textContent = "BUILD ANDROID APK →";
+  }
+  const icon=data.conclusion==="success"?"✓":data.conclusion==="failure"?"!":data.status==="in_progress"?"↻":"◷";
+  let html=`
+    <div class="panel-body">
+      <div class="build-status"><span class="status-icon">${icon}</span><span>${escapeHTML(state)} — ${escapeHTML(data.conclusion||data.status||"Waiting")}</span></div>
+      <div class="progress"><div class="progress-bar" style="width:${percent}%"></div></div>
+      <div class="progress-meta"><span>${data.conclusion==="success"?"Build completed":data.conclusion==="failure"?"Build failed":data.status==="in_progress"?"Workflow running":"Waiting for workflow"}</span><span>${percent}%</span></div>
+      <div class="activity"><div class="activity-head">WORKFLOW ACTIVITY</div>`;
+    if(items.length){
+      html+=items.map(item=>{
+        const [symbol,cls]=markFor(item.status,item.conclusion);
+        const detail=item.conclusion||item.status||"pending";
+        return `<div class="activity-item">
+          <div class="activity-mark ${cls}">${symbol}</div>
+          <div class="activity-text"><strong>${escapeHTML(item.name)}</strong><small>${escapeHTML(detail)}</small></div>
+        </div>`;
+      }).join("");
+    }else{
+      html+=`<div class="activity-item"><div class="activity-mark">○</div><div class="activity-text"><strong>Menunggu GitHub Actions</strong><small>queued</small></div></div>`;
+    }
+    html+=`</div>`;
+    if(data.actionsUrl){
+      html+=`<div class="result-actions"><a class="secondary" href="${escapeHTML(data.actionsUrl)}" target="_blank" rel="noopener">Open GitHub Actions ↗</a>`;
+    }else{
+      html+=`<div class="result-actions">`;
+    }
+    if(data.artifactReady && currentRequest){
+      html+=`<a class="primary" href="/api/download?requestId=${encodeURIComponent(currentRequest)}">↓ Download APK</a>`;
+    }
+    if(data.conclusion==="failure"){
+      html+=`<span class="note" style="margin:0;color:var(--red)">Build gagal. Buka GitHub Actions untuk melihat detail error.</span>`;
+    }
+    html+=`</div></div>`;
+    content.innerHTML=html;
+  }else{
+    content.innerHTML=`<div class="panel-body"><div class="build-status"><span class="status-icon">◷</span>Menunggu workflow ditemukan di GitHub Actions</div><div class="progress"><div class="progress-bar" style="width:8%"></div></div><div class="progress-meta"><span>Queued</span><span>8%</span></div></div>`;
   }
 }
+async function getStatus(requestId){
+  const response=await fetch("/api/status?requestId="+encodeURIComponent(requestId),{
+    method:"GET",cache:"no-store"
+  });
+  let data;
+  try{data=await response.json()}catch{throw new Error("Respons status server tidak valid.")}
+  if(!response.ok||data.success===false){
+    throw new Error(data.error||data.details||"Gagal memeriksa status build.");
+  }
+  return data;
+}
+function updateHistory(requestId, data){
+  const history=read(STORE.history,[]);
+  const index=history.findIndex(item=>item.requestId===requestId);
+  const previous=index>=0?history[index]:{};
+  const item={
+    ...previous,
+    requestId,
+    appName:previous.appName||$("appName").value.trim(),
+    packageName:previous.packageName||$("packageName").value.trim(),
+    website:previous.website||$("website").value.trim(),
+    status:statusLabel(data.status,data.conclusion),
+    conclusion:data.conclusion,
+    artifactReady:!!data.artifactReady,
+    actionsUrl:data.actionsUrl||previous.actionsUrl||"",
+    updatedAt:new Date().toISOString()
+  };
+  if(index>=0) history[index]=item;
+  else history.unshift(item);
+  write(STORE.history,history.slice(0,100));
+}
+function saveProject(data){
+  const projects=read(STORE.projects,[]);
+  const existing=projects.findIndex(p=>p.packageName===data.packageName);
+  const project={...data,updatedAt:new Date().toISOString()};
+  if(existing>=0) projects[existing]=project;
+  else projects.unshift(project);
+  write(STORE.projects,projects.slice(0,100));
+}
+async function pollStatus(requestId){
+  if(polling) return;
+  polling=true;
+  const started=Date.now();
+  const maxDuration=15*60*1000;
+  const tick=async()=>{
+    try{
+      const data=await getStatus(requestId);
+      renderActivity(data);
+      updateHistory(requestId,data);
+      if(data.conclusion==="success"||data.conclusion==="failure"||data.conclusion==="cancelled"||data.conclusion==="timed_out"){
+        polling=false;
+        clearInterval(pollTimer);
+        pollTimer=null;
+        if(data.conclusion==="success"&&data.artifactReady) toast("Build berhasil. APK siap diunduh.");
+        else if(data.conclusion!=="success") toast("Build selesai dengan status "+data.conclusion+".");
+        renderHistory();
+        return;
+      }
+      if(Date.now()-started>maxDuration){
+        polling=false;
+        clearInterval(pollTimer);
+        pollTimer=null;
+        toast("Pemantauan otomatis dihentikan. Cek status melalui GitHub Actions.");
+      }
+    }catch(error){
+      $("buildTag").textContent="CHECK ERROR";
+      toast(error.message);
+    }
+  };
+  await tick();
+  if(polling) pollTimer=setInterval(tick,5000);
+}
+$("buildBtn").addEventListener("click",async()=>{
+  if(polling){toast("Build sebelumnya masih dipantau.");return}
+  const data=formData();
+  const error=validate(data);
+  if(error){toast(error);return}
+  const button=$("buildBtn");
+  button.disabled=true;
+  button.textContent="Sending build request…";
+  saveForm();
+  try{
+    const payload={
+      appName:data.appName,
+      packageName:data.packageName,
+      websiteUrl:data.website,
+      versionName:data.versionName,
+      orientation:data.orientation,
+      themeColor:data.themeColor,
+      splashDuration:Number(data.splashDuration),
+      iconBase64,
+      splashBase64
+    };
+    const response=await fetch("/api/build",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    let result;
+    try{result=await response.json()}catch{throw new Error("Respons server tidak valid.")}
+    if(!response.ok||!result.success){
+      throw new Error(result.error+(result.details?" — "+result.details:"")||"Gagal mengirim build.");
+    }
+    currentRequest=result.requestId;
+    saveProject(data);
+    updateBuildTag("QUEUED");
+    $("buildContent").innerHTML=`<div class="panel-body"><div class="build-status"><span class="status-icon">◷</span>Build request accepted</div><div class="progress"><div class="progress-bar" style="width:8%"></div></div><div class="progress-meta"><span>Queued on GitHub Actions</span><span>8%</span></div><div class="note">Request ID: ${escapeHTML(currentRequest)}</div></div>`;
+    toast("Build request berhasil dikirim.");
+    navigate("builder");
+    await pollStatus(currentRequest);
+  }catch(error){
+    toast(error.message||"Terjadi kesalahan saat build.");
+    $("buildContent").innerHTML=`<div class="build-empty" style="color:var(--red)">${escapeHTML(error.message)}</div>`;
+    updateBuildTag("ERROR");
+  }finally{
+    button.disabled=false;
+    button.innerHTML="<span>↗</span> Build Android APK";
+  }
+});
+
+function renderProjects(){
+  const projects=read(STORE.projects,[]);
+  $("projectCount").textContent=projects.length+" PROJECTS";
+  if(!projects.length){
+    $("projectsContent").className="empty-state";
+    $("projectsContent").innerHTML="<strong>No projects yet</strong>Build aplikasi untuk menyimpan project pertamamu.";
+    return;
+  }
+  $("projectsContent").className="";
+  $("projectsContent").innerHTML=`<table class="data-table"><thead><tr><th>APPLICATION</th><th>PACKAGE</th><th>UPDATED</th><th>ACTION</th></tr></thead><tbody>${projects.map((p,i)=>`
+    <tr><td><strong>${escapeHTML(p.appName)}</strong><br><span style="color:#999;font-size:10px">${escapeHTML(p.website)}</span></td>
+    <td>${escapeHTML(p.packageName)}</td>
+    <td>${new Date(p.updatedAt).toLocaleDateString("id-ID")}</td>
+    <td><button class="secondary load-project" data-index="${i}">Open</button></td></tr>`).join("")}</tbody></table>`;
+  document.querySelectorAll(".load-project").forEach(btn=>btn.addEventListener("click",()=>{
+    const p=projects[Number(btn.dataset.index)];
+    if(!p)return;
+    $("website").value=p.website||"";
+    $("appName").value=p.appName||"";
+    $("packageName").value=p.packageName||"";
+    $("versionName").value=p.versionName||"1.0.0";
+    $("orientation").value=p.orientation||"portrait";
+    $("splashDuration").value=String(p.splashDuration||2000);
+    $("themeColor").value=p.themeColor||"#202020";
+    $("colorPicker").value=$("themeColor").value;
+    updatePreview();saveForm();navigate("builder");
+    toast("Project loaded.");
+  }));
+}
+function renderHistory(){
+  const history=read(STORE.history,[]);
+  $("historyCount").textContent=history.length+" BUILDS";
+  if(!history.length){
+    $("historyContent").className="empty-state";
+    $("historyContent").innerHTML="<strong>No build history</strong>Aktivitas build akan muncul di sini.";
+    return;
+  }
+  $("historyContent").className="";
+  $("historyContent").innerHTML=`<table class="data-table"><thead><tr><th>APPLICATION</th><th>STATUS</th><th>DATE</th><th>RESULT</th></tr></thead><tbody>${history.map((h,i)=>`
+    <tr><td><strong>${escapeHTML(h.appName||"Application")}</strong><br><span style="color:#999;font-size:9px">${escapeHTML(h.packageName||"")}</span></td>
+    <td>${escapeHTML(h.status||"QUEUED")}</td>
+    <td>${h.updatedAt?new Date(h.updatedAt).toLocaleString("id-ID"):"—"}</td>
+    <td>${h.artifactReady?`<a href="/api/download?requestId=${encodeURIComponent(h.requestId)}" style="color:#287a50;font-weight:700">Download</a>`:h.actionsUrl?`<a href="${escapeHTML(h.actionsUrl)}" target="_blank" rel="noopener">Actions ↗</a>`:"—"}</td></tr>`).join("")}</tbody></table>`;
+}
+$("newProject").addEventListener("click",()=>{
+  ["website","appName","packageName"].forEach(id=>$(id).value="");
+  $("versionName").value="1.0.0";
+  iconBase64="";splashBase64="";
+  $("iconName").textContent="PNG or JPG · Select an image";
+  $("splashName").textContent="PNG or JPG · Select an image";
+  $("iconPreview").textContent="◇";$("splashPreview").textContent="▧";
+  $("iconFile").value="";$("splashFile").value="";
+  updatePreview();saveForm();navigate("builder");
+});
+$("clearHistory").addEventListener("click",()=>{
+  if(!confirm("Hapus seluruh riwayat build lokal?"))return;
+  write(STORE.history,[]);renderHistory();toast("Riwayat lokal dihapus.");
+});
+$("clearLocal").addEventListener("click",()=>{
+  if(!confirm("Hapus semua project dan riwayat build yang tersimpan di browser ini?"))return;
+  localStorage.removeItem(STORE.projects);
+  localStorage.removeItem(STORE.history);
+  renderProjects();renderHistory();toast("Data lokal berhasil dibersihkan.");
+});
+const prefs=read(STORE.prefs,{orientation:"portrait",splash:"2000",remember:true});
+$("prefOrientation").value=prefs.orientation;
+$("prefSplash").value=prefs.splash;
+$("rememberForm").checked=prefs.remember!==false;
+$("prefOrientation").addEventListener("change",()=>{
+  const p=read(STORE.prefs,{});
+  p.orientation=$("prefOrientation").value;write(STORE.prefs,p);
+  $("orientation").value=p.orientation;saveForm();
+});
+$("prefSplash").addEventListener("change",()=>{
+  const p=read(STORE.prefs,{});
+  p.splash=$("prefSplash").value;write(STORE.prefs,p);
+  $("splashDuration").value=p.splash;saveForm();
+});
+$("rememberForm").addEventListener("change",()=>{
+  const p=read(STORE.prefs,{});
+  p.remember=$("rememberForm").checked;write(STORE.prefs,p);
+  if(!p.remember)localStorage.removeItem(STORE.form);
+  else saveForm();
+});
+
+restoreForm();
+renderProjects();
+renderHistory();
+})();
 </script>
 </body>
 </html>
