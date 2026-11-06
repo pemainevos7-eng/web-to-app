@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -7,12 +8,26 @@
 <title>ZORA BUILDER</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono&display=swap');
-:root{--bg:#f4f4f1;--white:#fff;--ink:#20211f;--muted:#85867f;--line:#e7e7e1;--soft:#f8f8f5}
+
+:root{
+--bg:#f4f4f1;
+--white:#fff;
+--ink:#20211f;
+--muted:#85867f;
+--line:#e7e7e1;
+--soft:#f8f8f5;
+--green:#26734d;
+--red:#a33d36;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink)}
 button,input,select{font:inherit}
 button{cursor:pointer}
-header{height:65px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px;position:sticky;top:0;z-index:5}
+header{
+height:65px;background:white;border-bottom:1px solid var(--line);
+display:flex;align-items:center;justify-content:space-between;
+padding:0 25px;position:sticky;top:0;z-index:5
+}
 .logo{font-size:16px;font-weight:800;letter-spacing:-.7px;display:flex;align-items:center;gap:10px}
 .logo-box{background:#20211f;color:white;width:29px;height:29px;display:grid;place-items:center}
 .logo small{font-size:11px;color:#999;font-weight:500;letter-spacing:1px}
@@ -45,6 +60,7 @@ h1{font-size:32px;letter-spacing:-1.5px}
 .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:22px}
 .mode{background:white;border:1px solid var(--line);text-align:left;padding:13px;min-height:78px}
 .mode.active{border:1px solid #292a26;background:#f5f5f1;box-shadow:inset 0 0 0 1px #292a26}
+.mode:disabled{opacity:.45;cursor:not-allowed}
 .mode b{display:block;font-size:11px;margin-bottom:7px}
 .mode small{font-size:9px;color:#999;line-height:1.5}
 .upload{min-height:110px;border:1px dashed #d4d4cc;background:#fafaf8;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:15px;cursor:pointer;text-align:center}
@@ -63,7 +79,12 @@ h1{font-size:32px;letter-spacing:-1.5px}
 .build-head small{font:9px 'DM Mono';color:#aaa}
 .build p{font-size:11px;color:#aaa;line-height:1.7;margin:13px 0 19px}
 .build button{height:47px;width:100%;border:0;background:#f1f1ec;font-size:11px;font-weight:800}
-.result{display:none;border-top:1px solid #444;padding-top:14px;margin-top:14px;font-size:11px;line-height:1.8;color:#ddd}
+.build button:disabled{opacity:.55;cursor:wait}
+.result{display:none;border-top:1px solid #444;padding-top:14px;margin-top:14px;font-size:11px;line-height:1.8;color:#ddd;overflow-wrap:anywhere}
+.result.success{color:#d5eadc}
+.result.error{color:#ffd2cd}
+.result a{color:white;display:inline-block;margin-top:10px;text-decoration:underline}
+.status{font:10px 'DM Mono';color:#aaa}
 footer{display:flex;justify-content:space-between;margin-top:30px;font:9px 'DM Mono';color:#aaa}
 .mobile-nav{display:none}
 @media(max-width:700px){
@@ -90,11 +111,13 @@ h1{font-size:27px}
 @media(max-width:360px){.modes{grid-template-columns:1fr}.mode{min-height:60px}}
 </style>
 </head>
+
 <body>
 <header>
 <div class="logo"><div class="logo-box">Z</div>ZORA <small>BUILDER</small></div>
-<div class="top-right">APPLICATION STUDIO / 1.0</div>
+<div class="top-right">APPLICATION STUDIO / 1.1</div>
 </header>
+
 <div class="shell">
 <aside>
 <div class="nav-label">WORKSPACE</div>
@@ -105,108 +128,267 @@ h1{font-size:27px}
 <button class="nav" onclick="notice('Settings')">04 &nbsp; Settings</button>
 <button class="nav" onclick="notice('Documentation')">05 &nbsp; Documentation</button>
 </aside>
+
 <main>
 <div class="crumb">WORKSPACE / <b>WEB TO APK</b></div>
-<div class="heading"><div><h1>Web to APK</h1><p>Convert a website into an Android application.</p></div><div class="tag">BUILD / 001</div></div>
-<div class="notice"><b>PROJECT CONFIGURATION</b><br>Configure your source, application identity and Android settings before submitting a build.</div>
+
+<div class="heading">
+<div>
+<h1>Web to APK</h1>
+<p>Convert a website into an Android application.</p>
+</div>
+<div class="tag">BUILD / 001</div>
+</div>
+
+<div class="notice">
+<b>PROJECT CONFIGURATION</b><br>
+Configure your website and application identity before submitting a build.
+</div>
 
 <section class="panel">
-<div class="panel-head"><div><b>Source</b><small>Select your website source</small></div><span class="step">01 / 04</span></div>
+<div class="panel-head">
+<div><b>Source</b><small>Select your website source</small></div>
+<span class="step">01 / 04</span>
+</div>
 <div class="panel-body">
 <div class="modes">
-<button class="mode active" onclick="setMode('url',this)"><b>Website URL</b><small>Existing website</small></button>
-<button class="mode" onclick="setMode('html',this)"><b>HTML File</b><small>Single HTML file</small></button>
-<button class="mode" onclick="setMode('zip',this)"><b>ZIP Archive</b><small>Complete project</small></button>
+<button class="mode active" onclick="setMode('url',this)">
+<b>Website URL</b><small>Existing website</small>
+</button>
+<button class="mode" disabled>
+<b>HTML File</b><small>Coming later</small>
+</button>
+<button class="mode" disabled>
+<b>ZIP Archive</b><small>Coming later</small>
+</button>
 </div>
-<div id="urlBox"><label class="label">Website address</label><input class="input" id="url" type="url" placeholder="https://example.com"><div class="hint">Include the full HTTPS address.</div></div>
-<div id="htmlBox" hidden><label class="label">HTML document</label><label class="upload"><b>Select HTML file</b><small>Choose index.html</small><input id="htmlFile" type="file" accept=".html,.htm"></label><div class="file-name" id="htmlName"></div></div>
-<div id="zipBox" hidden><label class="label">Project archive</label><label class="upload"><b>Select ZIP archive</b><small>Upload your website project</small><input id="zipFile" type="file" accept=".zip"></label><div class="file-name" id="zipName"></div></div>
+
+<div>
+<label class="label">Website address</label>
+<input class="input" id="url" type="url" placeholder="https://example.com">
+<div class="hint">Gunakan alamat HTTPS website yang lu miliki atau punya izin untuk dikemas.</div>
+</div>
 </div>
 </section>
 
 <section class="panel">
-<div class="panel-head"><div><b>Application details</b><small>Android application identity</small></div><span class="step">02 / 04</span></div>
+<div class="panel-head">
+<div><b>Application details</b><small>Android application identity</small></div>
+<span class="step">02 / 04</span>
+</div>
 <div class="panel-body">
-<div class="field"><label class="label">Application name</label><input class="input" id="appName" placeholder="My Application" maxlength="40"></div>
-<div class="field"><label class="label">Package identifier</label><input class="input" id="package" placeholder="com.example.application"><div class="hint">Unique reverse-domain identifier.</div></div>
+<div class="field">
+<label class="label">Application name</label>
+<input class="input" id="appName" placeholder="ZORA APP" maxlength="40">
+</div>
+<div class="field">
+<label class="label">Package identifier</label>
+<input class="input" id="package" placeholder="com.zora.app">
+<div class="hint">Example: com.company.application</div>
+</div>
 <div class="two">
-<div class="field"><label class="label">Version name</label><input class="input" id="version" value="1.0.0"></div>
-<div class="field"><label class="label">Version code</label><input class="input" id="code" type="number" min="1" value="1"></div>
+<div class="field">
+<label class="label">Version name</label>
+<input class="input" id="version" value="1.0.0">
+</div>
+<div class="field">
+<label class="label">Version code</label>
+<input class="input" id="code" type="number" min="1" value="1">
+</div>
 </div>
 </div>
 </section>
 
 <section class="panel">
-<div class="panel-head"><div><b>Application icon</b><small>Launcher appearance</small></div><span class="step">03 / 04</span></div>
+<div class="panel-head">
+<div><b>Application icon</b><small>Launcher appearance</small></div>
+<span class="step">03 / 04</span>
+</div>
 <div class="panel-body">
-<div class="icon-row"><div class="icon-preview" id="preview"><b>Z</b></div><div style="flex:1"><label class="label">Icon image</label><label class="upload" style="min-height:43px"><b>Choose image</b><input type="file" id="icon" accept="image/png,image/jpeg,image/webp"></label><div class="hint">Square PNG recommended.</div></div></div>
+<div class="icon-row">
+<div class="icon-preview" id="preview"><b>Z</b></div>
+<div style="flex:1">
+<label class="label">Icon image</label>
+<label class="upload" style="min-height:43px">
+<b>Choose image</b>
+<input type="file" id="icon" accept="image/png,image/jpeg,image/webp">
+</label>
+<div class="hint">Pengaturan ikon belum dikirim ke workflow.</div>
+</div>
+</div>
 </div>
 </section>
 
 <section class="panel">
-<div class="panel-head"><div><b>Android settings</b><small>Application behavior</small></div><span class="step">04 / 04</span></div>
+<div class="panel-head">
+<div><b>Android settings</b><small>Application behavior</small></div>
+<span class="step">04 / 04</span>
+</div>
 <div class="panel-body">
 <div class="two">
-<div class="field"><label class="label">Orientation</label><select class="input" id="orientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option><option value="auto">Auto rotate</option></select></div>
-<div class="field"><label class="label">Output format</label><select class="input" id="format"><option value="apk">APK</option><option value="aab">AAB</option></select></div>
+<div class="field">
+<label class="label">Orientation</label>
+<select class="input" id="orientation">
+<option value="portrait">Portrait</option>
+<option value="landscape">Landscape</option>
+<option value="auto">Auto rotate</option>
+</select>
 </div>
-<div class="field"><label class="label">Application theme</label><select class="input" id="theme"><option value="system">System default</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
-<div class="field"><label class="label">Permissions</label><label style="font-size:11px;display:flex;gap:9px;align-items:center"><input type="checkbox" id="internet" checked> Internet access</label></div>
+<div class="field">
+<label class="label">Output format</label>
+<select class="input" id="format">
+<option value="apk">APK</option>
+<option value="aab" disabled>AAB (coming later)</option>
+</select>
+</div>
+</div>
+<div class="field">
+<label class="label">Application theme</label>
+<select class="input" id="theme">
+<option value="system">System default</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</div>
+<div class="field">
+<label class="label">Permissions</label>
+<label style="font-size:11px;display:flex;gap:9px;align-items:center">
+<input type="checkbox" id="internet" checked disabled>
+Internet access (required)
+</label>
+</div>
 </div>
 </section>
 
 <section class="build">
-<div class="build-head"><h3>Build application</h3><small>FINAL STEP</small></div>
-<p>Submit the project to the Android build service. A real APK will be generated after the backend is connected.</p>
-<button onclick="build()">SUBMIT BUILD REQUEST →</button>
-<div class="result" id="result"></div>
+<div class="build-head">
+<h3>Build application</h3>
+<small>FINAL STEP</small>
+</div>
+<p>Submit your website to the Android build service. The APK will be generated by GitHub Actions.</p>
+<button id="buildButton" onclick="build()">SUBMIT BUILD REQUEST →</button>
+<div class="result" id="result" aria-live="polite"></div>
 </section>
-<footer><span>ZORA BUILDER / 2026</span><span>ANDROID STUDIO</span></footer>
+
+<footer>
+<span>ZORA BUILDER / 2026</span>
+<span>ANDROID BUILD SERVICE</span>
+</footer>
 </main>
 </div>
+
 <nav class="mobile-nav">
 <button class="active">01<br>Builder</button>
 <button onclick="notice('Projects')">02<br>Projects</button>
 <button onclick="notice('History')">03<br>History</button>
 <button onclick="notice('Settings')">04<br>Settings</button>
 </nav>
+
 <script>
-let mode='url';
-function setMode(m,b){
-mode=m;
-document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
-b.classList.add('active');
-['url','html','zip'].forEach(x=>document.getElementById(x+'Box').hidden=x!==m);
+function setMode(mode, button) {
+  document.querySelectorAll('.mode').forEach(item => item.classList.remove('active'));
+  button.classList.add('active');
 }
-function fileName(id,target){
-document.getElementById(id).addEventListener('change',e=>{
-document.getElementById(target).textContent=e.target.files[0]?.name||'';
+
+function notice(section) {
+  alert(section + ' is not available yet.');
+}
+
+document.getElementById('icon').addEventListener('change', event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!['image/png','image/jpeg','image/webp'].includes(file.type)) {
+    alert('Gunakan PNG, JPG, atau WEBP.');
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview').innerHTML =
+      '<img src="' + e.target.result + '" alt="Application icon">';
+  };
+  reader.readAsDataURL(file);
 });
-}
-fileName('htmlFile','htmlName');
-fileName('zipFile','zipName');
-document.getElementById('icon').addEventListener('change',e=>{
-const f=e.target.files[0];if(!f)return;
-const reader=new FileReader();
-reader.onload=x=>document.getElementById('preview').innerHTML='<img src="'+x.target.result+'" alt="Icon">';
-reader.readAsDataURL(f);
-});
-function notice(t){alert(t+' will be available in a future module.');}
-function build(){
-const name=document.getElementById('appName').value.trim();
-const pkg=document.getElementById('package').value.trim();
-const result=document.getElementById('result');
-if(!name)return alert('Application name is required.');
-if(!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(pkg))return alert('Invalid package identifier.');
-if(mode==='url'){
-try{const u=new URL(document.getElementById('url').value);if(!['http:','https:'].includes(u.protocol))throw 0;}catch{return alert('Enter a valid URL.');}
-}
-if(mode==='html'&&!document.getElementById('htmlFile').files.length)return alert('Select an HTML file.');
-if(mode==='zip'&&!document.getElementById('zipFile').files.length)return alert('Select a ZIP file.');
-result.style.display='block';
-result.textContent='Configuration valid. Backend is not connected yet. No APK has been generated.';
+
+async function build() {
+  const name = document.getElementById('appName').value.trim();
+  const pkg = document.getElementById('package').value.trim();
+  const website = document.getElementById('url').value.trim();
+
+  const result = document.getElementById('result');
+  const button = document.getElementById('buildButton');
+
+  result.className = 'result';
+  result.style.display = 'block';
+
+  if (!name) {
+    result.classList.add('error');
+    result.textContent = 'Application name is required.';
+    return;
+  }
+
+  if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(pkg)) {
+    result.classList.add('error');
+    result.textContent = 'Package identifier tidak valid.';
+    return;
+  }
+
+  let parsed;
+
+  try {
+    parsed = new URL(website);
+    if (parsed.protocol !== 'https:') {
+      throw new Error('Gunakan alamat HTTPS.');
+    }
+  } catch (error) {
+    result.classList.add('error');
+    result.textContent = error.message || 'Masukkan URL website HTTPS yang valid.';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'SUBMITTING BUILD...';
+  result.textContent = 'Mengirim permintaan build ke server...';
+
+  try {
+    const response = await fetch('/api/build', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        appName: name,
+        packageName: pkg,
+        websiteUrl: parsed.href
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'HTTP ' + response.status);
+    }
+
+    result.classList.add('success');
+    result.textContent = 'Permintaan build berhasil dikirim. Buka GitHub Actions untuk memantau proses dan mengunduh APK setelah selesai.';
+
+    const link = document.createElement('a');
+    link.href = 'https://github.com/pemainevos7-eng/web-to-app/actions';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'OPEN BUILD HISTORY';
+
+    result.appendChild(document.createElement('br'));
+    result.appendChild(link);
+
+  } catch (error) {
+    result.classList.add('error');
+    result.textContent = 'BUILD REQUEST FAILED: ' + error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = 'SUBMIT BUILD REQUEST →';
+  }
 }
 </script>
 </body>
-                                                             </html>
-                                                             
+</html>
