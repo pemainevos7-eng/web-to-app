@@ -1,0 +1,204 @@
+
+name: ZORA BUILDER APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: Application name
+        required: true
+        type: string
+      package_name:
+        description: Package identifier
+        required: true
+        type: string
+      website_url:
+        description: Website URL
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate inputs
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+          WEBSITE_URL: ${{ inputs.website_url }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from urllib.parse import urlparse
+
+          name = os.environ["APP_NAME"]
+          package = os.environ["PACKAGE_NAME"]
+          url = urlparse(os.environ["WEBSITE_URL"])
+
+          if not name or len(name) > 40:
+              raise SystemExit("Invalid application name")
+
+          if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+', package):
+              raise SystemExit("Invalid package name")
+
+          if url.scheme not in ("https", "http") or not url.hostname:
+              raise SystemExit("Invalid website URL")
+          PY
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Generate Android project
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+          WEBSITE_URL: ${{ inputs.website_url }}
+        run: |
+          python3 - <<'PY'
+          import os, json, re
+          from pathlib import Path
+          from xml.sax.saxutils import escape
+
+          name = os.environ["APP_NAME"]
+          package = os.environ["PACKAGE_NAME"]
+          url = os.environ["WEBSITE_URL"]
+
+          path = Path("app/src/main/java") / package.replace(".", "/")
+          path.mkdir(parents=True, exist_ok=True)
+          Path("app/src/main").mkdir(parents=True, exist_ok=True)
+
+          Path("settings.gradle").write_text("""
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "ZoraBuilder"
+          include ':app'
+          """)
+
+          Path("build.gradle").write_text("""
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          """)
+
+          Path("gradle.properties").write_text("""
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          """)
+
+          Path("app/build.gradle").write_text(f"""
+          plugins {{
+              id 'com.android.application'
+          }}
+
+          android {{
+              namespace '{package}'
+              compileSdk 35
+
+              defaultConfig {{
+                  applicationId '{package}'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0.0'
+              }}
+          }}
+          """)
+
+          manifest = f"""<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET"/>
+              <application
+                  android:label="{escape(name)}"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:usesCleartextTraffic="true">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>"""
+
+          Path("app/src/main/AndroidManifest.xml").write_text(manifest)
+
+          java = f"""package {package};
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebSettings;
+
+          public class MainActivity extends Activity {{
+              @Override
+              protected void onCreate(Bundle state) {{
+                  super.onCreate(state);
+                  WebView web = new WebView(this);
+                  WebSettings settings = web.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  web.setWebViewClient(new WebViewClient());
+                  web.loadUrl({json.dumps(url)});
+                  setContentView(web);
+              }}
+
+              @Override
+              public void onBackPressed() {{
+                  WebView web = (WebView) findViewById(android.R.id.content);
+                  if (web != null && web.canGoBack()) {{
+                      web.goBack();
+                  }} else {{
+                      super.onBackPressed();
+                  }}
+              }}
+          }}
+          """
+
+          (path / "MainActivity.java").write_text(java)
+          PY
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZORA-BUILDER-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          
