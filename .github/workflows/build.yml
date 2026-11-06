@@ -1,43 +1,43 @@
 
 name: ZORA BUILDER APK
 
-run-name: ZORA BUILD - ${{ github.event.inputs.request_id }}
+run-name: ZORA BUILD - ${{ inputs.request_id }}
 
 on:
   workflow_dispatch:
     inputs:
       request_id:
-        description: Unique build request ID
+        description: "Build request ID"
         required: true
         type: string
 
       app_name:
-        description: Nama aplikasi
+        description: "Nama aplikasi"
         required: true
         type: string
 
       package_name:
-        description: Package identifier
+        description: "Package name"
         required: true
         type: string
 
       website_url:
-        description: URL website
+        description: "URL website"
         required: true
         type: string
 
       icon_base64:
-        description: Ikon aplikasi Base64
+        description: "Icon image base64"
         required: false
         type: string
 
       splash_base64:
-        description: Gambar loading screen Base64
+        description: "Splash image base64"
         required: false
         type: string
 
       orientation:
-        description: Orientasi aplikasi
+        description: "Orientasi aplikasi"
         required: true
         type: choice
         options:
@@ -45,21 +45,18 @@ on:
           - landscape
 
       version_name:
-        description: Versi aplikasi
+        description: "Versi aplikasi"
         required: true
-        default: '1.0.0'
         type: string
 
       theme_color:
-        description: Warna background splash
+        description: "Warna tema HEX"
         required: true
-        default: '#101114'
         type: string
 
       splash_duration:
-        description: Durasi splash dalam milidetik
+        description: "Durasi splash dalam milidetik"
         required: true
-        default: '2000'
         type: string
 
 permissions:
@@ -71,10 +68,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate inputs and images
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Generate Android project
         env:
           APP_NAME: ${{ inputs.app_name }}
           PACKAGE_NAME: ${{ inputs.package_name }}
@@ -86,133 +103,99 @@ jobs:
           THEME_COLOR: ${{ inputs.theme_color }}
           SPLASH_DURATION: ${{ inputs.splash_duration }}
         run: |
-          python3 -m pip install pillow
+          python3 -m pip install --quiet Pillow
 
-          python3 - <<'PY'
-          import os, re, base64
+          python3 <<'PY'
+          import os, re, json, base64
           from pathlib import Path
-          from io import BytesIO
           from PIL import Image, ImageOps, ImageDraw
-          from xml.sax.saxutils import quoteattr
 
-          name = os.environ["APP_NAME"].strip()
-          package = os.environ["PACKAGE_NAME"].strip()
-          url = os.environ["WEBSITE_URL"].strip()
+          app_name = os.environ["APP_NAME"]
+          package = os.environ["PACKAGE_NAME"]
+          url = os.environ["WEBSITE_URL"]
           orientation = os.environ["ORIENTATION"]
-          version = os.environ["VERSION_NAME"].strip()
-          color = os.environ["THEME_COLOR"].strip()
+          version = os.environ["VERSION_NAME"]
+          color = os.environ["THEME_COLOR"]
           duration = int(os.environ["SPLASH_DURATION"])
 
-          if not name or len(name) > 40:
-              raise SystemExit("Nama aplikasi tidak valid")
+          if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+", package):
+              raise ValueError("Package name tidak valid")
 
-          if not re.fullmatch(
-              r'[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+',
-              package
-          ):
-              raise SystemExit("Package name tidak valid")
-
-          if not re.fullmatch(r'https?://[^ ]+', url):
-              raise SystemExit("URL website tidak valid")
+          if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
+              raise ValueError("Warna tema harus HEX, contoh #202020")
 
           if orientation not in ("portrait", "landscape"):
-              raise SystemExit("Orientasi tidak valid")
+              raise ValueError("Orientasi tidak valid")
 
-          if not re.fullmatch(r'[A-Za-z0-9._-]{1,20}', version):
-              raise SystemExit("Versi aplikasi tidak valid")
+          if not re.match(r"^https?://", url):
+              raise ValueError("URL harus diawali http:// atau https://")
 
-          if not re.fullmatch(r'#[0-9a-fA-F]{6}', color):
-              raise SystemExit("Warna tema tidak valid")
+          duration = max(0, min(duration, 10000))
 
-          if not 0 <= duration <= 10000:
-              raise SystemExit("Durasi splash tidak valid")
+          root = Path("android-project")
+          app = root / "app"
+          src = app / "src/main"
+          java_package = package.replace(".", "/")
+          java_dir = src / "java" / java_package
+
+          java_dir.mkdir(parents=True, exist_ok=True)
+          (src / "res").mkdir(parents=True, exist_ok=True)
 
           def decode_image(value):
               if not value:
                   return None
-
-              if len(value) > 25000:
-                  raise SystemExit("Ukuran gambar terlalu besar")
-
-              if value.startswith("data:") and "," in value:
+              if "," in value and value.startswith("data:"):
                   value = value.split(",", 1)[1]
-
-              try:
-                  raw = base64.b64decode(value, validate=True)
-                  image = Image.open(BytesIO(raw))
-                  image.load()
-
-                  if image.width > 4096 or image.height > 4096:
-                      raise SystemExit("Resolusi gambar terlalu besar")
-
-                  return image.convert("RGBA")
-              except SystemExit:
-                  raise
-              except Exception:
-                  raise SystemExit("Format gambar tidak valid")
+              return Image.open(
+                  __import__("io").BytesIO(base64.b64decode(value))
+              ).convert("RGBA")
 
           icon = decode_image(os.environ.get("ICON_BASE64", ""))
           splash = decode_image(os.environ.get("SPLASH_BASE64", ""))
 
-          root = Path("app/src/main")
-          package_path = root / "java" / package.replace(".", "/")
-          package_path.mkdir(parents=True, exist_ok=True)
-
-          # Default icon
-          if icon is None:
-              icon = Image.new("RGBA", (512, 512), "#101114")
-              draw = ImageDraw.Draw(icon)
-              draw.rounded_rectangle(
-                  (55, 55, 457, 457),
-                  radius=100,
-                  fill="#292c35"
-              )
-              draw.text((230, 215), "Z", fill="white")
-
-          # Default splash
-          if splash is None:
-              splash = Image.new("RGBA", (1080, 1920), color)
-              draw = ImageDraw.Draw(splash)
-              draw.text((490, 940), "ZORA", fill="white")
-
-          # Launcher icons
+          # Generate launcher icons
           sizes = {
-              "mdpi": 48,
-              "hdpi": 72,
-              "xhdpi": 96,
-              "xxhdpi": 144,
-              "xxxhdpi": 192
+              "mipmap-mdpi": 48,
+              "mipmap-hdpi": 72,
+              "mipmap-xhdpi": 96,
+              "mipmap-xxhdpi": 144,
+              "mipmap-xxxhdpi": 192
           }
 
-          for density, size in sizes.items():
-              folder = root / "res" / f"mipmap-{density}"
-              folder.mkdir(parents=True, exist_ok=True)
+          for folder, size in sizes.items():
+              out = src / "res" / folder
+              out.mkdir(parents=True, exist_ok=True)
 
-              output = ImageOps.fit(icon, (size, size))
-              output.save(folder / "ic_launcher.png")
+              if icon:
+                  image = ImageOps.fit(icon, (size, size))
+              else:
+                  image = Image.new("RGBA", (size, size), color)
+                  draw = ImageDraw.Draw(image)
+                  draw.ellipse(
+                      (size*.2, size*.2, size*.8, size*.8),
+                      fill="white"
+                  )
 
-          # Splash image
-          drawable = root / "res" / "drawable-nodpi"
-          drawable.mkdir(parents=True, exist_ok=True)
+              image.save(out / "ic_launcher.png")
 
-          splash = ImageOps.contain(splash, (1080, 1920))
-          canvas = Image.new("RGBA", (1080, 1920), color)
+          # Generate splash image
+          splash_dir = src / "res/drawable-nodpi"
+          splash_dir.mkdir(parents=True, exist_ok=True)
 
-          canvas.alpha_composite(
-              splash,
-              (
-                  (1080 - splash.width) // 2,
-                  (1920 - splash.height) // 2
+          if splash:
+              splash = ImageOps.contain(splash, (1080, 1920))
+              canvas = Image.new("RGBA", (1080, 1920), color)
+              canvas.alpha_composite(
+                  splash,
+                  ((1080-splash.width)//2, (1920-splash.height)//2)
               )
-          )
+          else:
+              canvas = Image.new("RGBA", (1080, 1920), color)
 
-          canvas.convert("RGB").save(
-              drawable / "zora_splash.jpg",
-              quality=90
-          )
+          canvas.save(splash_dir / "splash.png")
 
           # Gradle settings
-          Path("settings.gradle").write_text("""
+          (root / "settings.gradle").write_text("""
           pluginManagement {
               repositories {
                   google()
@@ -220,7 +203,6 @@ jobs:
                   gradlePluginPortal()
               }
           }
-
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -228,23 +210,22 @@ jobs:
                   mavenCentral()
               }
           }
-
           rootProject.name = "ZoraBuilder"
-          include ':app'
+          include(":app")
           """)
 
-          Path("build.gradle").write_text("""
+          (root / "build.gradle").write_text("""
           plugins {
               id 'com.android.application' version '8.7.3' apply false
           }
           """)
 
-          Path("gradle.properties").write_text("""
-          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          (root / "gradle.properties").write_text("""
+          org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g
           android.useAndroidX=true
           """)
 
-          Path("app/build.gradle").write_text(f"""
+          (app / "build.gradle").write_text(f"""
           plugins {{
               id 'com.android.application'
           }}
@@ -263,12 +244,12 @@ jobs:
           }}
           """)
 
-          manifest = f"""
+          manifest = f"""<?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET"/>
-
               <application
-                  android:label={quoteattr(name)}
+                  android:allowBackup="false"
+                  android:label={json.dumps(app_name)}
                   android:icon="@mipmap/ic_launcher"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
                   android:usesCleartextTraffic="true">
@@ -276,84 +257,82 @@ jobs:
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
-                      android:screenOrientation="{orientation}">
+                      android:screenOrientation="{orientation}"
+                      android:configChanges="orientation|screenSize|keyboardHidden">
 
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
-
                   </activity>
               </application>
           </manifest>
           """
 
-          (root / "AndroidManifest.xml").write_text(manifest)
+          (src / "AndroidManifest.xml").write_text(manifest)
 
-          java = f"""
+          java_code = f"""
           package {package};
 
           import android.app.Activity;
           import android.os.Bundle;
-          import android.os.Handler;
-          import android.graphics.Color;
-          import android.widget.FrameLayout;
-          import android.widget.ImageView;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
-          import android.webkit.WebSettings;
+          import android.webkit.WebChromeClient;
+          import android.view.View;
+          import android.widget.FrameLayout;
+          import android.widget.ImageView;
+          import android.graphics.Color;
+          import android.graphics.Bitmap;
+          import android.graphics.drawable.BitmapDrawable;
+          import android.graphics.drawable.Drawable;
+          import android.os.Handler;
+          import android.os.Looper;
+          import android.webkit.WebResourceRequest;
 
           public class MainActivity extends Activity {{
 
               private WebView web;
-
-              private void openWebsite() {{
-                  web = new WebView(this);
-
-                  WebSettings settings = web.getSettings();
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-                  settings.setDatabaseEnabled(true);
-
-                  web.setWebViewClient(new WebViewClient());
-                  web.loadUrl({repr(url)});
-
-                  setContentView(web);
-              }}
+              private FrameLayout root;
 
               @Override
-              protected void onCreate(Bundle state) {{
-                  super.onCreate(state);
+              protected void onCreate(Bundle savedInstanceState) {{
+                  super.onCreate(savedInstanceState);
+
+                  getWindow().setStatusBarColor(Color.parseColor("{color}"));
+                  getWindow().setNavigationBarColor(Color.BLACK);
+
+                  root = new FrameLayout(this);
+
+                  web = new WebView(this);
+                  web.getSettings().setJavaScriptEnabled(true);
+                  web.getSettings().setDomStorageEnabled(true);
+                  web.getSettings().setDatabaseEnabled(true);
+                  web.getSettings().setLoadsImagesAutomatically(true);
+                  web.getSettings().setSupportZoom(false);
+                  web.setWebViewClient(new WebViewClient());
+                  web.setWebChromeClient(new WebChromeClient());
+
+                  root.addView(web);
 
                   ImageView splash = new ImageView(this);
-
                   splash.setImageResource(
                       getResources().getIdentifier(
-                          "zora_splash",
-                          "drawable",
-                          getPackageName()
+                          "splash", "drawable", getPackageName()
                       )
                   );
-
                   splash.setScaleType(ImageView.ScaleType.FIT_CENTER);
                   splash.setBackgroundColor(Color.parseColor("{color}"));
 
-                  FrameLayout layout = new FrameLayout(this);
+                  root.addView(splash);
+                  setContentView(root);
 
-                  layout.addView(
-                      splash,
-                      new FrameLayout.LayoutParams(
-                          FrameLayout.LayoutParams.MATCH_PARENT,
-                          FrameLayout.LayoutParams.MATCH_PARENT
-                      )
-                  );
-
-                  setContentView(layout);
-
-                  new Handler().postDelayed(
-                      this::openWebsite,
-                      {duration}
-                  );
+                  new Handler(Looper.getMainLooper()).postDelayed(() -> {{
+                      if (splash.getParent() != null) {{
+                          root.removeView(splash);
+                      }}
+                      web.loadUrl({json.dumps(url)});
+                  }}, {duration});
               }}
 
               @Override
@@ -367,45 +346,30 @@ jobs:
           }}
           """
 
-          (package_path / "MainActivity.java").write_text(java)
+          (java_dir / "MainActivity.java").write_text(java_code)
 
-          print("Android project generated successfully")
+          print("Android project berhasil dibuat")
           PY
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools'
-
-      - name: Install Android platform
-        run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-
       - name: Build APK
-        run: gradle assembleDebug
+        working-directory: android-project
+        run: |
+          gradle --no-daemon assembleDebug
 
       - name: Prepare APK
         env:
           APP_NAME: ${{ inputs.app_name }}
-          REQUEST_ID: ${{ inputs.request_id }}
+          VERSION_NAME: ${{ inputs.version_name }}
         run: |
           mkdir -p output
 
-          SAFE_NAME=$(echo "$APP_NAME" | tr -cd 'A-Za-z0-9._-' | cut -c1-30)
+          APP_SLUG=$(echo "$APP_NAME" | tr ' ' '-' | tr -cd 'A-Za-z0-9_-')
+          VERSION_SLUG=$(echo "$VERSION_NAME" | tr -cd 'A-Za-z0-9._-')
 
-          cp app/build/outputs/apk/debug/app-debug.apk \
-            "output/${SAFE_NAME:-ZORA}-${REQUEST_ID}.apk"
+          cp android-project/app/build/outputs/apk/debug/app-debug.apk \
+            "output/${APP_SLUG}-${VERSION_SLUG}.apk"
+
+          ls -lh output/
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -414,3 +378,4 @@ jobs:
           path: output/*.apk
           if-no-files-found: error
           retention-days: 7
+          
